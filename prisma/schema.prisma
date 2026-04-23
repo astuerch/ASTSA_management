@@ -1,0 +1,319 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum BillingMode {
+  CONTRACT
+  EXTRA
+  BOTH
+}
+
+enum InterventionType {
+  ORDINARY
+  EXTRA
+  EMERGENCY
+}
+
+enum PhotoType {
+  BEFORE
+  AFTER
+  OTHER
+}
+
+enum InvoiceDraftStatus {
+  DRAFT
+  VALIDATED
+  EXPORTED_TO_SAGE
+}
+
+enum SageExportType {
+  CSV
+  EXCEL
+  PDF
+}
+
+enum SageEntityType {
+  INVOICE_DRAFT
+  REPORT
+  CONTRACT_CONTROL
+}
+
+enum SageExportStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum ClientType {
+  AMMINISTRAZIONE
+  FIDUCIARIA
+  PRIVATO
+}
+
+enum ServiceCategory {
+  ORDINARIO
+  EXTRA
+}
+
+model Role {
+  id          Int    @id @default(autoincrement())
+  code        String @unique
+  name        String
+  description String?
+  users       User[]
+
+  @@map("roles")
+}
+
+model User {
+  id              Int      @id @default(autoincrement())
+  roleId          Int      @map("role_id")
+  firstName       String   @map("first_name")
+  lastName        String   @map("last_name")
+  email           String   @unique
+  passwordHash    String   @default("") @map("password_hash")
+  hourlyCostCents Int?     @map("hourly_cost_cents")
+  qualifications  String?
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  role            Role     @relation(fields: [roleId], references: [id])
+  interventions   Intervention[] @relation("InterventionCreator")
+  workerLinks     InterventionWorker[]
+  exports         SageExport[]
+
+  @@map("users")
+}
+
+model Client {
+  id                Int               @id @default(autoincrement())
+  businessName      String            @map("business_name")
+  type              ClientType        @default(AMMINISTRAZIONE)
+  address           String?           @map("billing_address")
+  billingEmail      String?           @map("billing_email")
+  phone             String?
+  contactName       String?           @map("contact_name")
+  notes             String?
+  specialConditions String?           @map("special_conditions")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  properties        Property[]
+  contracts         CustodyContract[]
+  invoiceDrafts     InvoiceDraft[]
+
+  @@map("clients")
+}
+
+model Property {
+  id                  Int               @id @default(autoincrement())
+  clientId            Int               @map("client_id")
+  name                String
+  address             String
+  serviceFrequency    String?           @map("service_frequency")
+  expectedWeeklyHours Float?            @map("expected_weekly_hours")
+  operationalNotes    String?           @map("operational_notes")
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+  client              Client            @relation(fields: [clientId], references: [id])
+  contracts           CustodyContract[]
+  interventions       Intervention[]
+
+  @@index([clientId], map: "idx_properties_client_id")
+  @@map("properties")
+}
+
+model Service {
+  id                    Int               @id @default(autoincrement())
+  code                  String            @unique
+  name                  String
+  category              ServiceCategory   @default(ORDINARIO)
+  unit                  String            @default("ora")
+  billingMode           BillingMode       @default(BOTH) @map("billing_mode")
+  defaultHourlyRateCents Int?            @map("default_hourly_rate_cents")
+  defaultUnitRateCents Int?              @map("default_unit_rate_cents")
+  createdAt             DateTime          @default(now()) @map("created_at")
+  updatedAt             DateTime          @updatedAt @map("updated_at")
+  interventions         Intervention[]
+  contracts             CustodyContractService[]
+
+  @@map("services")
+}
+
+model CustodyContract {
+  id                 Int                      @id @default(autoincrement())
+  clientId           Int                      @map("client_id")
+  propertyId         Int                      @map("property_id")
+  weeklyFrequency    Int?                     @map("weekly_frequency")
+  expectedHoursMonthly Float?                 @map("expected_hours_monthly")
+  monthlyPriceCents  Int                      @map("monthly_price_cents")
+  includedServices   String?                  @map("included_services")
+  excludedServices   String?                  @map("excluded_services")
+  startsOn           DateTime?                @map("starts_on")
+  endsOn             DateTime?                @map("ends_on")
+  isActive           Boolean                  @default(true) @map("is_active")
+  createdAt          DateTime                 @default(now()) @map("created_at")
+  updatedAt          DateTime                 @updatedAt @map("updated_at")
+  client             Client                   @relation(fields: [clientId], references: [id])
+  property           Property                 @relation(fields: [propertyId], references: [id])
+  controls           ContractControl[]
+  services           CustodyContractService[]
+
+  @@index([propertyId], map: "idx_contracts_property_id")
+  @@map("custody_contracts")
+}
+
+model CustodyContractService {
+  contractId Int @map("contract_id")
+  serviceId  Int @map("service_id")
+  contract   CustodyContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  service    Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([contractId, serviceId])
+  @@map("custody_contract_services")
+}
+
+model Intervention {
+  id                 Int                @id @default(autoincrement())
+  propertyId         Int                @map("property_id")
+  serviceId          Int?               @map("service_id")
+  createdByUserId    Int                @map("created_by_user_id")
+  interventionType   InterventionType   @map("intervention_type")
+  startsAt           DateTime?          @map("starts_at")
+  endsAt             DateTime?          @map("ends_at")
+  notes              String?
+  anomalyReport      String?            @map("anomaly_report")
+  isBillableExtra    Boolean            @default(false) @map("is_billable_extra")
+  validatedByOffice  Boolean            @default(false) @map("validated_by_office")
+  readyForSage       Boolean            @default(false) @map("ready_for_sage")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+  property           Property           @relation(fields: [propertyId], references: [id])
+  service            Service?           @relation(fields: [serviceId], references: [id])
+  createdByUser      User               @relation("InterventionCreator", fields: [createdByUserId], references: [id])
+  workers            InterventionWorker[]
+  photos             InterventionPhoto[]
+  materials          InterventionMaterial[]
+  report             WorkReport?
+  invoiceDrafts      InvoiceDraft[]
+
+  @@index([propertyId], map: "idx_interventions_property_id")
+  @@index([readyForSage], map: "idx_interventions_ready_for_sage")
+  @@map("interventions")
+}
+
+model InterventionWorker {
+  interventionId Int @map("intervention_id")
+  userId         Int @map("user_id")
+  intervention   Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+  user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([interventionId, userId])
+  @@map("intervention_workers")
+}
+
+model InterventionPhoto {
+  id             Int       @id @default(autoincrement())
+  interventionId Int       @map("intervention_id")
+  photoType      PhotoType @map("photo_type")
+  filePath       String    @map("file_path")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  intervention   Intervention @relation(fields: [interventionId], references: [id])
+
+  @@map("intervention_photos")
+}
+
+model Material {
+  id            Int      @id @default(autoincrement())
+  code          String   @unique
+  name          String
+  unit          String
+  unitCostCents Int      @map("unit_cost_cents")
+  stockQuantity Float?   @map("stock_quantity")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  interventions InterventionMaterial[]
+
+  @@map("materials")
+}
+
+model InterventionMaterial {
+  interventionId    Int @map("intervention_id")
+  materialId        Int @map("material_id")
+  quantity          Float
+  billableSeparately Boolean @default(false) @map("billable_separately")
+  intervention      Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+  material          Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@id([interventionId, materialId])
+  @@map("intervention_materials")
+}
+
+model WorkReport {
+  id                   Int      @id @default(autoincrement())
+  interventionId       Int      @unique @map("intervention_id")
+  internalSummary      String?  @map("internal_summary")
+  clientSummary        String?  @map("client_summary")
+  employeeTotalMinutes Int?     @map("employee_total_minutes")
+  customerSignatureName String? @map("customer_signature_name")
+  pdfPath              String?  @map("pdf_path")
+  createdAt            DateTime @default(now()) @map("created_at")
+  intervention         Intervention @relation(fields: [interventionId], references: [id])
+  invoiceDrafts        InvoiceDraft[]
+
+  @@map("work_reports")
+}
+
+model ContractControl {
+  id            Int      @id @default(autoincrement())
+  contractId    Int      @map("contract_id")
+  periodStart   DateTime @map("period_start")
+  periodEnd     DateTime @map("period_end")
+  expectedHours Float    @map("expected_hours")
+  actualHours   Float    @map("actual_hours")
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  contract      CustodyContract @relation(fields: [contractId], references: [id])
+
+  @@index([contractId], map: "idx_contract_controls_contract_id")
+  @@map("contract_controls")
+}
+
+model InvoiceDraft {
+  id             Int               @id @default(autoincrement())
+  clientId       Int               @map("client_id")
+  interventionId Int?              @map("intervention_id")
+  reportId       Int?              @map("report_id")
+  subtotalCents  Int               @map("subtotal_cents")
+  taxCents       Int               @default(0) @map("tax_cents")
+  totalCents     Int               @map("total_cents")
+  status         InvoiceDraftStatus
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+  client         Client            @relation(fields: [clientId], references: [id])
+  intervention   Intervention?     @relation(fields: [interventionId], references: [id])
+  report         WorkReport?       @relation(fields: [reportId], references: [id])
+
+  @@index([status], map: "idx_invoice_drafts_status")
+  @@map("invoice_drafts")
+}
+
+model SageExport {
+  id               Int              @id @default(autoincrement())
+  exportType       SageExportType   @map("export_type")
+  entityType       SageEntityType   @map("entity_type")
+  entityId         Int              @map("entity_id")
+  exportedByUserId Int?             @map("exported_by_user_id")
+  exportedAt       DateTime?        @map("exported_at")
+  filePath         String?          @map("file_path")
+  status           SageExportStatus @default(PENDING)
+  failureReason    String?          @map("failure_reason")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  exportedByUser   User?            @relation(fields: [exportedByUserId], references: [id])
+
+  @@map("sage_exports")
+}
