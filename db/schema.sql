@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS custody_contracts (
   id INTEGER PRIMARY KEY,
   client_id INTEGER NOT NULL,
   property_id INTEGER NOT NULL,
+  -- Number of planned service executions per week (1..7).
   weekly_frequency INTEGER CHECK (weekly_frequency IS NULL OR (weekly_frequency >= 1 AND weekly_frequency <= 7)),
   expected_hours_monthly REAL,
   monthly_price_cents INTEGER NOT NULL,
@@ -165,7 +166,11 @@ CREATE TABLE IF NOT EXISTS invoice_drafts (
   status TEXT NOT NULL CHECK (status IN ('DRAFT', 'VALIDATED', 'EXPORTED_TO_SAGE')),
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-  CHECK (intervention_id IS NOT NULL OR report_id IS NOT NULL),
+  CHECK (
+    (intervention_id IS NOT NULL AND report_id IS NULL)
+    OR
+    (intervention_id IS NULL AND report_id IS NOT NULL)
+  ),
   FOREIGN KEY (client_id) REFERENCES clients(id),
   FOREIGN KEY (intervention_id) REFERENCES interventions(id),
   FOREIGN KEY (report_id) REFERENCES work_reports(id)
@@ -179,7 +184,7 @@ CREATE TABLE IF NOT EXISTS sage_exports (
   exported_by_user_id INTEGER,
   exported_at TEXT,
   file_path TEXT,
-  status TEXT NOT NULL CHECK (status IN ('PENDING', 'COMPLETED', 'FAILED')) DEFAULT 'PENDING',
+  status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'COMPLETED', 'FAILED')),
   failure_reason TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (exported_by_user_id) REFERENCES users(id)
