@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS custody_contracts (
   id INTEGER PRIMARY KEY,
   client_id INTEGER NOT NULL,
   property_id INTEGER NOT NULL,
-  weekly_frequency INTEGER,
+  weekly_frequency INTEGER CHECK (weekly_frequency IS NULL OR (weekly_frequency >= 1 AND weekly_frequency <= 7)),
   expected_hours_monthly REAL,
   monthly_price_cents INTEGER NOT NULL,
   included_services TEXT,
@@ -142,6 +142,18 @@ CREATE TABLE IF NOT EXISTS work_reports (
   FOREIGN KEY (intervention_id) REFERENCES interventions(id)
 );
 
+CREATE TABLE IF NOT EXISTS contract_controls (
+  id INTEGER PRIMARY KEY,
+  contract_id INTEGER NOT NULL,
+  period_start TEXT NOT NULL,
+  period_end TEXT NOT NULL,
+  expected_hours REAL NOT NULL,
+  actual_hours REAL NOT NULL,
+  notes TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (contract_id) REFERENCES custody_contracts(id)
+);
+
 CREATE TABLE IF NOT EXISTS invoice_drafts (
   id INTEGER PRIMARY KEY,
   client_id INTEGER NOT NULL,
@@ -153,6 +165,7 @@ CREATE TABLE IF NOT EXISTS invoice_drafts (
   status TEXT NOT NULL CHECK (status IN ('DRAFT', 'VALIDATED', 'EXPORTED_TO_SAGE')),
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  CHECK (intervention_id IS NOT NULL OR report_id IS NOT NULL),
   FOREIGN KEY (client_id) REFERENCES clients(id),
   FOREIGN KEY (intervention_id) REFERENCES interventions(id),
   FOREIGN KEY (report_id) REFERENCES work_reports(id)
@@ -177,3 +190,4 @@ CREATE INDEX IF NOT EXISTS idx_contracts_property_id ON custody_contracts(proper
 CREATE INDEX IF NOT EXISTS idx_interventions_property_id ON interventions(property_id);
 CREATE INDEX IF NOT EXISTS idx_interventions_ready_for_sage ON interventions(ready_for_sage);
 CREATE INDEX IF NOT EXISTS idx_invoice_drafts_status ON invoice_drafts(status);
+CREATE INDEX IF NOT EXISTS idx_contract_controls_contract_id ON contract_controls(contract_id);
