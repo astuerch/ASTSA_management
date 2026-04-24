@@ -60,6 +60,30 @@ enum ServiceCategory {
   EXTRA
 }
 
+enum WorkType {
+  ORDINARIO
+  EXTRA
+  TRASFERTA
+  REGIA
+  FORFAIT
+  STRAORDINARIO
+  PICCHETTO
+  EMERGENZA
+}
+
+enum InterventionStatus {
+  IN_CORSO
+  COMPLETATO
+  VALIDATO
+  PRONTO_FATTURA
+}
+
+enum PhotoKind {
+  PRIMA
+  DOPO
+  ANOMALIA
+}
+
 model Role {
   id          Int    @id @default(autoincrement())
   code        String @unique
@@ -73,6 +97,7 @@ model Role {
 model User {
   id              Int      @id @default(autoincrement())
   roleId          Int      @map("role_id")
+  teamId          Int?     @map("team_id")
   firstName       String   @map("first_name")
   lastName        String   @map("last_name")
   email           String   @unique
@@ -86,6 +111,9 @@ model User {
   interventions   Intervention[] @relation("InterventionCreator")
   workerLinks     InterventionWorker[]
   exports         SageExport[]
+  validatedInterventions Intervention[] @relation("InterventionValidator")
+  uploadedPhotos  InterventionPhoto[]
+  auditLogs       InterventionAuditLog[]
 
   @@map("users")
 }
@@ -182,33 +210,53 @@ model Intervention {
   propertyId         Int                @map("property_id")
   serviceId          Int?               @map("service_id")
   createdByUserId    Int                @map("created_by_user_id")
-  interventionType   InterventionType   @map("intervention_type")
+  interventionType   InterventionType   @default(ORDINARY) @map("intervention_type")
+  workType           WorkType           @default(ORDINARIO) @map("work_type")
+  status             InterventionStatus @default(IN_CORSO)
   startsAt           DateTime?          @map("starts_at")
   endsAt             DateTime?          @map("ends_at")
+  startedAt          DateTime?          @map("started_at")
+  endedAt            DateTime?          @map("ended_at")
+  durationMinutes    Int?               @map("duration_minutes")
   notes              String?
   anomalyReport      String?            @map("anomaly_report")
+  anomaly            String?
   isBillableExtra    Boolean            @default(false) @map("is_billable_extra")
+  isExtra            Boolean            @default(false) @map("is_extra")
   validatedByOffice  Boolean            @default(false) @map("validated_by_office")
   readyForSage       Boolean            @default(false) @map("ready_for_sage")
+  startLat           Float?             @map("start_lat")
+  startLng           Float?             @map("start_lng")
+  startAccuracy      Float?             @map("start_accuracy")
+  endLat             Float?             @map("end_lat")
+  endLng             Float?             @map("end_lng")
+  clientSignatureUrl String?            @map("client_signature_url")
+  clientSignerName   String?            @map("client_signer_name")
+  validatedById      Int?               @map("validated_by_id")
+  validatedAt        DateTime?          @map("validated_at")
   createdAt          DateTime           @default(now()) @map("created_at")
   updatedAt          DateTime           @updatedAt @map("updated_at")
   property           Property           @relation(fields: [propertyId], references: [id])
   service            Service?           @relation(fields: [serviceId], references: [id])
   createdByUser      User               @relation("InterventionCreator", fields: [createdByUserId], references: [id])
+  validatedBy        User?              @relation("InterventionValidator", fields: [validatedById], references: [id])
   workers            InterventionWorker[]
   photos             InterventionPhoto[]
   materials          InterventionMaterial[]
   report             WorkReport?
   invoiceDrafts      InvoiceDraft[]
+  auditLogs          InterventionAuditLog[]
 
   @@index([propertyId], map: "idx_interventions_property_id")
   @@index([readyForSage], map: "idx_interventions_ready_for_sage")
+  @@index([status], map: "idx_interventions_status")
   @@map("interventions")
 }
 
 model InterventionWorker {
-  interventionId Int @map("intervention_id")
-  userId         Int @map("user_id")
+  interventionId Int     @map("intervention_id")
+  userId         Int     @map("user_id")
+  isLead         Boolean @default(false) @map("is_lead")
   intervention   Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
   user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -219,10 +267,16 @@ model InterventionWorker {
 model InterventionPhoto {
   id             Int       @id @default(autoincrement())
   interventionId Int       @map("intervention_id")
-  photoType      PhotoType @map("photo_type")
-  filePath       String    @map("file_path")
+  photoType      PhotoType @default(OTHER) @map("photo_type")
+  kind           PhotoKind @default(DOPO)
+  filePath       String?   @map("file_path")
+  url            String    @default("")
+  publicId       String?   @map("public_id")
+  uploadedById   Int?      @map("uploaded_by_id")
+  uploadedAt     DateTime  @default(now()) @map("uploaded_at")
   createdAt      DateTime  @default(now()) @map("created_at")
   intervention   Intervention @relation(fields: [interventionId], references: [id])
+  uploadedBy     User?    @relation(fields: [uploadedById], references: [id])
 
   @@map("intervention_photos")
 }
@@ -242,14 +296,16 @@ model Material {
 }
 
 model InterventionMaterial {
-  interventionId    Int @map("intervention_id")
-  materialId        Int @map("material_id")
+  id                Int      @id @default(autoincrement())
+  interventionId    Int      @map("intervention_id")
+  materialId        Int      @map("material_id")
   quantity          Float
+  unitCostCents     Int?     @map("unit_cost_cents")
+  notes             String?
   billableSeparately Boolean @default(false) @map("billable_separately")
   intervention      Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
   material          Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
 
-  @@id([interventionId, materialId])
   @@map("intervention_materials")
 }
 
@@ -316,4 +372,19 @@ model SageExport {
   exportedByUser   User?            @relation(fields: [exportedByUserId], references: [id])
 
   @@map("sage_exports")
+}
+
+model InterventionAuditLog {
+  id             Int          @id @default(autoincrement())
+  interventionId Int          @map("intervention_id")
+  userId         Int          @map("user_id")
+  changedField   String       @map("changed_field")
+  oldValue       String?      @map("old_value")
+  newValue       String?      @map("new_value")
+  changedAt      DateTime     @default(now()) @map("changed_at")
+  intervention   Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id])
+
+  @@index([interventionId], map: "idx_audit_logs_intervention_id")
+  @@map("intervention_audit_logs")
 }

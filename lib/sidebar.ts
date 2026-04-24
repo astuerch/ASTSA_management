@@ -13,6 +13,7 @@ const roleRank: Record<SidebarItem['minRole'], number> = {
 
 export const sidebarItems: SidebarItem[] = [
   { href: '/dashboard/jobs', label: 'I miei lavori', minRole: 'DIPENDENTE' },
+  { href: '/dashboard/interventions', label: 'Interventi', minRole: 'DIPENDENTE' },
   { href: '/dashboard/team', label: 'Team', minRole: 'CAPOSQUADRA' },
   { href: '/dashboard/validations', label: 'Validazioni', minRole: 'CAPOSQUADRA' },
   { href: '/dashboard/clients', label: 'Clienti', minRole: 'AMMINISTRAZIONE' },

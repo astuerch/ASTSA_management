@@ -4,7 +4,7 @@ import { getSidebarItemsForRole } from '@/lib/sidebar';
 describe('sidebar ruoli', () => {
   it('dipendente vede solo i miei lavori', () => {
     const items = getSidebarItemsForRole('DIPENDENTE');
-    expect(items.map((x) => x.label)).toEqual(['I miei lavori']);
+    expect(items.map((x) => x.label)).toEqual(['I miei lavori', 'Interventi']);
   });
 
   it('caposquadra vede team e validazioni', () => {
