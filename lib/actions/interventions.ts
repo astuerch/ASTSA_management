@@ -255,7 +255,7 @@ export async function validateIntervention(interventionId: number) {
   });
   if (!intervention) throw new Error('Intervento non trovato');
   if (intervention.status === InterventionStatus.IN_CORSO) {
-    throw new Error("Impossibile validare un intervento in corso");
+    throw new Error('Impossibile validare un intervento in corso');
   }
 
   const newStatus = intervention.isExtra
@@ -299,7 +299,7 @@ export async function updateInterventionHours(interventionId: number, formData: 
 
   const newStartedAt = new Date(data.startedAt);
   const newEndedAt = new Date(data.endedAt);
-  if (newEndedAt <= newStartedAt) throw new Error("L'orario di fine deve essere dopo l'inizio");
+  if (newEndedAt <= newStartedAt) throw new Error('Orario fine deve essere dopo inizio');
 
   const newDuration = calculateDurationMinutes(newStartedAt, newEndedAt);
 
