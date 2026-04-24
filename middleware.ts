@@ -3,7 +3,9 @@ import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
 export async function middleware(request: NextRequest) {
-  if (!request.nextUrl.pathname.startsWith('/dashboard')) {
+  const { pathname } = request.nextUrl;
+
+  if (!pathname.startsWith('/dashboard') && !pathname.startsWith('/work')) {
     return NextResponse.next();
   }
 
@@ -17,5 +19,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*'],
+  matcher: ['/dashboard/:path*', '/work/:path*'],
 };
