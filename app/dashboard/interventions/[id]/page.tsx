@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatDuration } from '@/lib/time';
 import { validateIntervention, updateInterventionHours } from '@/lib/actions/interventions';
+import { GeneratePdfButton } from '@/components/dashboard/generate-pdf-button';
 
 const STATUS_LABELS: Record<InterventionStatus, string> = {
   IN_CORSO: 'In corso',
@@ -77,6 +78,7 @@ export default async function InterventionDetailPage({
         <span className="rounded px-2 py-1 text-sm font-medium bg-slate-100">
           {STATUS_LABELS[iv.status]}
         </span>
+        <GeneratePdfButton interventionId={iv.id} isAdmin={isAdmin} />
       </div>
 
       {/* Timeline */}

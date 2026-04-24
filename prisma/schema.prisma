@@ -114,6 +114,7 @@ model User {
   validatedInterventions Intervention[] @relation("InterventionValidator")
   uploadedPhotos  InterventionPhoto[]
   auditLogs       InterventionAuditLog[]
+  generatedReports GeneratedReport[]
 
   @@map("users")
 }
@@ -387,4 +388,32 @@ model InterventionAuditLog {
 
   @@index([interventionId], map: "idx_audit_logs_intervention_id")
   @@map("intervention_audit_logs")
+}
+
+enum ReportKind {
+  INTERVENTION
+  DAILY
+  PROPERTY_HISTORY
+  MONTHLY_HOURS
+}
+
+model GeneratedReport {
+  id             String     @id @default(cuid())
+  kind           ReportKind
+  locale         String
+  variant        String?
+  interventionId Int?       @map("intervention_id")
+  propertyId     Int?       @map("property_id")
+  workerId       Int?       @map("worker_id")
+  periodFrom     DateTime?  @map("period_from")
+  periodTo       DateTime?  @map("period_to")
+  pdfUrl         String     @map("pdf_url")
+  pdfPublicId    String?    @map("pdf_public_id")
+  generatedById  Int        @map("generated_by_id")
+  generatedAt    DateTime   @default(now()) @map("generated_at")
+  generatedBy    User       @relation(fields: [generatedById], references: [id])
+
+  @@index([kind], map: "idx_generated_reports_kind")
+  @@index([generatedById], map: "idx_generated_reports_generated_by")
+  @@map("generated_reports")
 }

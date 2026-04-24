@@ -22,6 +22,7 @@ export const sidebarItems: SidebarItem[] = [
   { href: '/dashboard/staff', label: 'Personale', minRole: 'AMMINISTRAZIONE' },
   { href: '/dashboard/services', label: 'Servizi', minRole: 'AMMINISTRAZIONE' },
   { href: '/dashboard/materials', label: 'Materiali', minRole: 'AMMINISTRAZIONE' },
+  { href: '/dashboard/reports', label: 'Rapporti', minRole: 'AMMINISTRAZIONE' },
   { href: '/dashboard/kpi', label: 'Dashboard KPI', minRole: 'DIREZIONE' },
 ];
 

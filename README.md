@@ -50,7 +50,24 @@ Apri [http://localhost:3000/login](http://localhost:3000/login).
 - `docs/roadmap.md`
 - `docs/development.md`
 - `docs/phase-2-interventions.md`
+- `docs/phase-3-reports.md`
 - `db/schema.sql` (storico di riferimento)
+
+## Rapporti PDF
+
+L'app supporta la generazione di rapporti PDF tramite `@react-pdf/renderer`. I rapporti sono disponibili in:
+- **Italiano** (`it`) e **Svizzero tedesco** (`de-ch`, senza "ß")
+- **Variante cliente** (senza costi) e **variante interna** (con costi, solo CAPOSQUADRA+)
+
+### Tipi di rapporto
+| Tipo | Route | Descrizione |
+|---|---|---|
+| Intervento | `/api/reports/intervention/[id]` | Singolo intervento |
+| Giornaliero | `/api/reports/daily` | Ore del giorno per dipendente |
+| Storico stabile | `/api/reports/property/[id]` | Tutti gli interventi su uno stabile |
+| Ore mensili | `/api/reports/monthly` | Riepilogo mensile per dipendente |
+
+Tutti i rapporti generati vengono archiviati in `/dashboard/reports`.
 
 ## Variabili d'ambiente
 
