@@ -78,7 +78,7 @@ export function MonthlyHoursReportPdf({ data, locale }: Props) {
               {ivs.map((iv, i) => (
                 <View key={i} style={baseStyles.tableRow}>
                   <Text style={[baseStyles.tableCell, { width: '50%' }]}>
-                    {t(`workType.${iv.workType}` as `workType.${string}`, locale) || iv.workType}
+                    {t(`workType.${iv.workType}`, locale) || iv.workType}
                   </Text>
                   <Text style={[baseStyles.tableCell, { width: '50%', textAlign: 'right' as const }]}>
                     {iv.durationMinutes != null ? formatDuration(iv.durationMinutes) : '—'}
@@ -102,7 +102,7 @@ export function MonthlyHoursReportPdf({ data, locale }: Props) {
         {WORK_TYPES.filter((wt) => totalByType.has(wt)).map((wt) => (
           <View key={wt} style={baseStyles.tableRow}>
             <Text style={[baseStyles.tableCell, { width: '50%' }]}>
-              {t(`workType.${wt}` as `workType.${string}`, locale) || wt}
+              {t(`workType.${wt}`, locale) || wt}
             </Text>
             <Text style={[baseStyles.tableCell, { width: '50%', textAlign: 'right' as const }]}>
               {formatDuration(totalByType.get(wt) ?? 0)}

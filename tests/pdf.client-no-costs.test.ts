@@ -14,16 +14,15 @@ vi.mock('@react-pdf/renderer', () => ({
 
 describe('PDF variante client - nessun costo', () => {
   it('la variante client non include prezzi o costi unitari nella struttura dati', () => {
-    const variant = 'client';
     // In client variant, isInternal = false, so unitCostCents/subtotal columns are not rendered
-    const isInternal = variant === 'internal';
-    expect(isInternal).toBe(false);
+    // Use a map to avoid TypeScript literal comparison issues
+    const variantFlags: Record<string, boolean> = { client: false, internal: true };
+    expect(variantFlags['client']).toBe(false);
   });
 
   it('la variante internal include colonne costi', () => {
-    const variant = 'internal';
-    const isInternal = variant === 'internal';
-    expect(isInternal).toBe(true);
+    const variantFlags: Record<string, boolean> = { client: false, internal: true };
+    expect(variantFlags['internal']).toBe(true);
   });
 
   it('variant client non ha accesso a report.total_cost key nella UI', async () => {

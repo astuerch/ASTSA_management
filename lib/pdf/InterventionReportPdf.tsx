@@ -87,7 +87,7 @@ export function InterventionReportPdf({ data, locale, variant }: Props) {
         />
         <InfoRow
           label={t('report.work_type', locale)}
-          value={t(`workType.${data.workType}` as `workType.${string}`, locale) || data.workType}
+          value={t(`workType.${data.workType}`, locale) || data.workType}
         />
         <InfoRow
           label={t('report.workers', locale)}

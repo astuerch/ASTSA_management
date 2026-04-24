@@ -50,12 +50,12 @@ export async function GET(request: Request) {
   const element = React.createElement(MonthlyHoursReportPdf, {
     data: { worker, year, month, interventions },
     locale,
-  });
+  }) as React.ReactElement<any>;
 
-  const buffer = await renderToBuffer(element);
+  const buffer = Buffer.from(await renderToBuffer(element));
   const filename = `ore-mensili-${yearStr}-${monthStr.padStart(2, '0')}-${locale}.pdf`;
 
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${filename}"`,

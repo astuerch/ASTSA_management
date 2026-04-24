@@ -66,7 +66,7 @@ export function DailyReportPdf({ data, locale }: Props) {
             </Text>
             <Text style={[baseStyles.tableCell, styles.col2]}>{iv.property.name}</Text>
             <Text style={[baseStyles.tableCell, styles.col3]}>
-              {t(`workType.${iv.workType}` as `workType.${string}`, locale) || iv.workType}
+              {t(`workType.${iv.workType}`, locale) || iv.workType}
             </Text>
             <Text style={[baseStyles.tableCell, styles.col4]}>
               {iv.durationMinutes != null ? formatDuration(iv.durationMinutes) : '—'}

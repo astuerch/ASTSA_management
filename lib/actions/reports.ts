@@ -54,7 +54,7 @@ export async function generateInterventionReport(
     data: iv as Parameters<typeof InterventionReportPdf>[0]['data'],
     locale,
     variant,
-  });
+  }) as React.ReactElement<any>;
 
   const buffer = Buffer.from(await renderToBuffer(element));
   const folder = `astsa/reports/interventions`;
@@ -108,7 +108,7 @@ export async function generateDailyReport(
   const element = React.createElement(DailyReportPdf, {
     data: { worker, date, interventions },
     locale,
-  });
+  }) as React.ReactElement<any>;
 
   const buffer = Buffer.from(await renderToBuffer(element));
   const { url, publicId } = await uploadImage(buffer, `astsa/reports/daily`);
@@ -163,7 +163,7 @@ export async function generatePropertyReport(
   const element = React.createElement(PropertyHistoryReportPdf, {
     data: { property, periodFrom: from, periodTo: to, interventions, variant },
     locale,
-  });
+  }) as React.ReactElement<any>;
 
   const buffer = Buffer.from(await renderToBuffer(element));
   const { url, publicId } = await uploadImage(buffer, `astsa/reports/properties`);
@@ -214,7 +214,7 @@ export async function generateMonthlyReport(
   const element = React.createElement(MonthlyHoursReportPdf, {
     data: { worker, year, month, interventions },
     locale,
-  });
+  }) as React.ReactElement<any>;
 
   const buffer = Buffer.from(await renderToBuffer(element));
   const { url, publicId } = await uploadImage(buffer, `astsa/reports/monthly`);

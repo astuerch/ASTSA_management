@@ -51,12 +51,12 @@ export async function GET(request: Request) {
   const element = React.createElement(DailyReportPdf, {
     data: { worker, date, interventions },
     locale,
-  });
+  }) as React.ReactElement<any>;
 
-  const buffer = await renderToBuffer(element);
+  const buffer = Buffer.from(await renderToBuffer(element));
   const filename = `rapporto-giornaliero-${dateStr}-${locale}.pdf`;
 
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${filename}"`,

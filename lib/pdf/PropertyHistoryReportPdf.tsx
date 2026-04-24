@@ -80,7 +80,7 @@ export function PropertyHistoryReportPdf({ data, locale }: Props) {
               {iv.workers.map((w) => `${w.user.firstName} ${w.user.lastName}`).join(', ') || '—'}
             </Text>
             <Text style={[baseStyles.tableCell, { width: '20%' }]}>
-              {t(`workType.${iv.workType}` as `workType.${string}`, locale) || iv.workType}
+              {t(`workType.${iv.workType}`, locale) || iv.workType}
             </Text>
             <Text style={[baseStyles.tableCell, { width: '15%', textAlign: 'right' as const }]}>
               {iv.durationMinutes != null ? formatDuration(iv.durationMinutes) : '—'}

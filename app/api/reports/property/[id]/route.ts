@@ -56,12 +56,12 @@ export async function GET(
   const element = React.createElement(PropertyHistoryReportPdf, {
     data: { property, periodFrom: from, periodTo: to, interventions, variant },
     locale,
-  });
+  }) as React.ReactElement<any>;
 
-  const buffer = await renderToBuffer(element);
+  const buffer = Buffer.from(await renderToBuffer(element));
   const filename = `storico-stabile-${id}-${locale}-${variant}.pdf`;
 
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${filename}"`,

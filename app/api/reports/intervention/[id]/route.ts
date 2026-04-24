@@ -52,13 +52,13 @@ export async function GET(
     data: iv as Parameters<typeof InterventionReportPdf>[0]['data'],
     locale,
     variant,
-  });
+  }) as React.ReactElement<any>;
 
-  const buffer = await renderToBuffer(element);
+  const buffer = Buffer.from(await renderToBuffer(element));
 
   const filename = `rapporto-intervento-${id}-${locale}-${variant}.pdf`;
 
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${filename}"`,

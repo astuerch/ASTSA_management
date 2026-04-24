@@ -1,12 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import deCh from '@/lib/i18n/de-ch';
 
-function getAllStringValues(obj: Record<string, string>): [string, string][] {
-  return Object.entries(obj);
-}
-
 describe('DE-CH dictionary – Swiss German rules', () => {
-  const entries = getAllStringValues(deCh);
+  const entries = Object.entries(deCh) as [string, string][];
 
   it('non contiene il carattere ß (vietato in svizzero tedesco)', () => {
     for (const [key, value] of entries) {
