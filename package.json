@@ -24,6 +24,7 @@
     "next-auth": "^4.24.14",
     "react": "^18",
     "react-dom": "^18",
+    "swissqrbill": "^3.2.3",
     "tailwind-merge": "^3.3.1",
     "zod": "^4.3.6"
   },

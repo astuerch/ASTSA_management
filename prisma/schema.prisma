@@ -26,9 +26,34 @@ enum PhotoType {
 }
 
 enum InvoiceDraftStatus {
-  DRAFT
-  VALIDATED
-  EXPORTED_TO_SAGE
+  BOZZA
+  PRONTO_EXPORT
+  ESPORTATO
+  REGISTRATO_SAGE
+  ANNULLATO
+}
+
+enum QuoteStatus {
+  BOZZA
+  INVIATO
+  ACCETTATO
+  RIFIUTATO
+  SCADUTO
+}
+
+enum InvoiceLineSource {
+  MANUAL
+  INTERVENTION_HOURS
+  INTERVENTION_MATERIAL
+  QUOTE_LINE
+  DISCOUNT
+}
+
+enum VatCode {
+  STANDARD
+  RIDOTTA
+  ALLOGGIO
+  ESENTE
 }
 
 enum SageExportType {
@@ -115,6 +140,8 @@ model User {
   uploadedPhotos  InterventionPhoto[]
   auditLogs       InterventionAuditLog[]
   generatedReports GeneratedReport[]
+  quotes           Quote[]          @relation("QuoteCreator")
+  invoiceDrafts    InvoiceDraft[]   @relation("InvoiceCreator")
 
   @@map("users")
 }
@@ -131,9 +158,11 @@ model Client {
   specialConditions String?           @map("special_conditions")
   createdAt         DateTime          @default(now()) @map("created_at")
   updatedAt         DateTime          @updatedAt @map("updated_at")
+  sageCustomerNumber String?           @map("sage_customer_number")
   properties        Property[]
   contracts         CustodyContract[]
   invoiceDrafts     InvoiceDraft[]
+  quotes            Quote[]
 
   @@map("clients")
 }
@@ -151,6 +180,8 @@ model Property {
   client              Client            @relation(fields: [clientId], references: [id])
   contracts           CustodyContract[]
   interventions       Intervention[]
+  quotes              Quote[]
+  invoiceDrafts       InvoiceDraft[]
 
   @@index([clientId], map: "idx_properties_client_id")
   @@map("properties")
@@ -320,7 +351,6 @@ model WorkReport {
   pdfPath              String?  @map("pdf_path")
   createdAt            DateTime @default(now()) @map("created_at")
   intervention         Intervention @relation(fields: [interventionId], references: [id])
-  invoiceDrafts        InvoiceDraft[]
 
   @@map("work_reports")
 }
@@ -341,22 +371,142 @@ model ContractControl {
 }
 
 model InvoiceDraft {
-  id             Int               @id @default(autoincrement())
-  clientId       Int               @map("client_id")
-  interventionId Int?              @map("intervention_id")
-  reportId       Int?              @map("report_id")
-  subtotalCents  Int               @map("subtotal_cents")
-  taxCents       Int               @default(0) @map("tax_cents")
-  totalCents     Int               @map("total_cents")
-  status         InvoiceDraftStatus
-  createdAt      DateTime          @default(now()) @map("created_at")
-  updatedAt      DateTime          @updatedAt @map("updated_at")
-  client         Client            @relation(fields: [clientId], references: [id])
-  intervention   Intervention?     @relation(fields: [interventionId], references: [id])
-  report         WorkReport?       @relation(fields: [reportId], references: [id])
+  id                   String             @id @default(cuid())
+  number               String             @unique
+  year                 Int
+  sequence             Int
+  clientId             Int                @map("client_id")
+  propertyId           Int?               @map("property_id")
+  subject              String
+  status               InvoiceDraftStatus @default(BOZZA)
+  documentDate         DateTime           @map("document_date")
+  dueDate              DateTime           @map("due_date")
+  paymentTermsDays     Int                @default(30) @map("payment_terms_days")
+  notes                String?
+  fromQuoteId          String?            @map("from_quote_id")
+  fromInterventionId   Int?               @map("from_intervention_id")
+  subtotalCents        Int                @default(0) @map("subtotal_cents")
+  vatTotalCents        Int                @default(0) @map("vat_total_cents")
+  totalCents           Int                @default(0) @map("total_cents")
+  currency             String             @default("CHF")
+  locale               String             @default("it")
+  pdfUrl               String?            @map("pdf_url")
+  pdfPublicId          String?            @map("pdf_public_id")
+  exportedAt           DateTime?          @map("exported_at")
+  exportedBatchId      String?            @map("exported_batch_id")
+  createdById          Int                @map("created_by_id")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+  client               Client             @relation(fields: [clientId], references: [id])
+  property             Property?          @relation(fields: [propertyId], references: [id])
+  createdBy            User               @relation("InvoiceCreator", fields: [createdById], references: [id])
+  fromIntervention     Intervention?      @relation(fields: [fromInterventionId], references: [id])
+  lines                InvoiceLine[]
 
   @@index([status], map: "idx_invoice_drafts_status")
+  @@index([clientId], map: "idx_invoice_drafts_client_id")
   @@map("invoice_drafts")
+}
+
+model InvoiceLine {
+  id               String            @id @default(cuid())
+  invoiceId        String            @map("invoice_id")
+  position         Int
+  description      String
+  quantity         Float
+  unit             String
+  unitPriceCents   Int               @map("unit_price_cents")
+  discountCents    Int               @default(0) @map("discount_cents")
+  vatCode          VatCode           @default(STANDARD) @map("vat_code")
+  source           InvoiceLineSource @default(MANUAL)
+  sourceRefId      String?           @map("source_ref_id")
+  netAmountCents   Int               @map("net_amount_cents")
+  vatAmountCents   Int               @map("vat_amount_cents")
+  totalAmountCents Int               @map("total_amount_cents")
+  invoice          InvoiceDraft      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId], map: "idx_invoice_lines_invoice_id")
+  @@map("invoice_lines")
+}
+
+model Quote {
+  id                    String      @id @default(cuid())
+  number                String      @unique
+  year                  Int
+  sequence              Int
+  clientId              Int         @map("client_id")
+  propertyId            Int?        @map("property_id")
+  subject               String
+  status                QuoteStatus @default(BOZZA)
+  validUntil            DateTime?   @map("valid_until")
+  notes                 String?
+  subtotalCents         Int         @default(0) @map("subtotal_cents")
+  vatTotalCents         Int         @default(0) @map("vat_total_cents")
+  totalCents            Int         @default(0) @map("total_cents")
+  currency              String      @default("CHF")
+  locale                String      @default("it")
+  pdfUrl                String?     @map("pdf_url")
+  pdfPublicId           String?     @map("pdf_public_id")
+  sentAt                DateTime?   @map("sent_at")
+  acceptedAt            DateTime?   @map("accepted_at")
+  rejectedAt            DateTime?   @map("rejected_at")
+  convertedToInvoiceId  String?     @map("converted_to_invoice_id")
+  createdById           Int         @map("created_by_id")
+  createdAt             DateTime    @default(now()) @map("created_at")
+  updatedAt             DateTime    @updatedAt @map("updated_at")
+  client                Client      @relation(fields: [clientId], references: [id])
+  property              Property?   @relation(fields: [propertyId], references: [id])
+  createdBy             User        @relation("QuoteCreator", fields: [createdById], references: [id])
+  lines                 QuoteLine[]
+
+  @@index([clientId], map: "idx_quotes_client_id")
+  @@index([status], map: "idx_quotes_status")
+  @@map("quotes")
+}
+
+model QuoteLine {
+  id               String    @id @default(cuid())
+  quoteId          String    @map("quote_id")
+  position         Int
+  description      String
+  quantity         Float
+  unit             String
+  unitPriceCents   Int       @map("unit_price_cents")
+  discountCents    Int       @default(0) @map("discount_cents")
+  vatCode          VatCode   @default(STANDARD) @map("vat_code")
+  netAmountCents   Int       @map("net_amount_cents")
+  vatAmountCents   Int       @map("vat_amount_cents")
+  totalAmountCents Int       @map("total_amount_cents")
+  quote            Quote     @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId], map: "idx_quote_lines_quote_id")
+  @@map("quote_lines")
+}
+
+model PriceListItem {
+  id             String   @id @default(cuid())
+  code           String   @unique
+  description    String
+  unit           String
+  unitPriceCents Int      @map("unit_price_cents")
+  vatCode        VatCode  @default(STANDARD) @map("vat_code")
+  category       String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([active], map: "idx_price_list_active")
+  @@map("price_list_items")
+}
+
+model NumberingCounter {
+  id      String @id @default(cuid())
+  prefix  String
+  year    Int
+  current Int    @default(0)
+
+  @@unique([prefix, year])
+  @@map("numbering_counters")
 }
 
 model SageExport {

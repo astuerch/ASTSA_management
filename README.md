@@ -91,3 +91,40 @@ Tutti i rapporti generati vengono archiviati in `/dashboard/reports`.
 |---|---|---|
 | `admin@astsa.local` | `Admin123!` | AMMINISTRAZIONE |
 | `dipendente@astsa.local` | `Demo123!` | DIPENDENTE |
+
+
+## Preventivi e bozze fatture
+
+### Moduli disponibili (da /dashboard)
+
+| Modulo | Path | Ruoli |
+|---|---|---|
+| Preventivi | `/dashboard/quotes` | AMMINISTRAZIONE, DIREZIONE |
+| Bozze fatture | `/dashboard/invoices` | AMMINISTRAZIONE, DIREZIONE |
+| Listino prezzi | `/dashboard/price-list` | AMMINISTRAZIONE, DIREZIONE |
+
+### Numerazione
+
+- **Preventivi**: `PR-{ANNO}-{SEQUENZA}` (es. `PR-2026-0001`)
+- **Bozze Fatture**: `BZ-{ANNO}-{SEQUENZA}` (es. `BZ-2026-0001`)
+- Sage/Infoniqa assegna il numero ufficiale `FA00xxxx` in fase di import (PR #6)
+
+### Workflow tipico
+
+1. Crea preventivo → inserisci righe → marca "Inviato" → "Accettato"
+2. "Trasforma in bozza fattura" → genera BZ- automaticamente con righe copiate
+3. Verifica bozza → "Marca pronto per export" → export CSV Infoniqa (PR #6)
+
+### PDF
+
+I PDF vengono generati con `@react-pdf/renderer` con:
+- Logo aziendale a colori top-left
+- Testo monocromo (nero/grigi)
+- Scadenza in arancione `#E07B00`
+- QR-bill svizzera completa (conforme SIX Group) in calce alle fatture
+
+### Calcolo IVA svizzera
+
+Arrotondamento al 5 centesimo (`roundSwiss`). Aliquote: 8.1% standard, 2.6% ridotta, 3.8% alloggio, 0% esente.
+
+Documentazione tecnica completa: [`docs/phase-4a-quotes-invoices.md`](docs/phase-4a-quotes-invoices.md)

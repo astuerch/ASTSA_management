@@ -28,6 +28,7 @@ export default async function ClientsPage() {
           <div><Label>Indirizzo</Label><Input name="address" /></div>
           <div className="md:col-span-3"><Label>Note</Label><Textarea name="notes" /></div>
           <div className="md:col-span-3"><Label>Condizioni particolari</Label><Textarea name="specialConditions" /></div>
+          <div><Label>Numero cliente Sage</Label><Input name="sageCustomerNumber" placeholder="es. 1383" /></div>
           <Button type="submit" className="w-fit">Crea cliente</Button>
         </form>
       </Card>
@@ -49,6 +50,7 @@ export default async function ClientsPage() {
                     <Input name="address" defaultValue={client.address ?? ''} />
                     <Textarea name="notes" defaultValue={client.notes ?? ''} className="md:col-span-3" />
                     <Textarea name="specialConditions" defaultValue={client.specialConditions ?? ''} className="md:col-span-3" />
+                    <Input name="sageCustomerNumber" defaultValue={client.sageCustomerNumber ?? ''} placeholder="No. cliente Sage" />
                     <div className="md:col-span-3 flex items-center gap-2">
                       <Button type="submit">Modifica</Button>
                       <Badge>{client.type}</Badge>
