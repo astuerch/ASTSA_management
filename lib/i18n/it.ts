@@ -80,6 +80,19 @@ const it: Messages = {
   'qrBill.currency': 'Valuta',
   'qrBill.amount': 'Importo',
   'qrBill.acceptancePoint': 'Punto di accettazione',
+  'sage.export.title': 'Export Infoniqa',
+  'sage.export.batch': 'Batch',
+  'sage.export.generate': 'Genera export',
+  'sage.export.download': 'Scarica ZIP',
+  'sage.export.confirm': 'Conferma import avvenuto',
+  'sage.export.cancel': 'Annulla batch',
+  'sage.config.title': 'Configurazione contabile',
+  'sage.config.account': 'Conti contabili',
+  'sage.config.vatCode': 'Codici IVA',
+  'sage.config.costCenter': 'Centri di costo',
+  'sage.export.status.generated': 'Generato',
+  'sage.export.status.confirmed': 'Importato',
+  'sage.export.status.cancelled': 'Annullato',
 };
 
 export default it;

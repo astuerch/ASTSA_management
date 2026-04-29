@@ -26,6 +26,7 @@ export const sidebarItems: SidebarItem[] = [
   { href: '/dashboard/quotes', label: 'Preventivi', minRole: 'AMMINISTRAZIONE' },
   { href: '/dashboard/invoices', label: 'Bozze fatture', minRole: 'AMMINISTRAZIONE' },
   { href: '/dashboard/price-list', label: 'Listino prezzi', minRole: 'AMMINISTRAZIONE' },
+  { href: '/dashboard/sage/exports', label: 'Export Infoniqa', minRole: 'AMMINISTRAZIONE' },
   { href: '/dashboard/kpi', label: 'Dashboard KPI', minRole: 'DIREZIONE' },
 ];
 

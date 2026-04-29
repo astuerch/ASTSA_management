@@ -42,6 +42,37 @@ export async function uploadImage(
   });
 }
 
+export async function uploadBuffer(
+  buffer: Buffer,
+  options: { folder: string; publicId?: string; resourceType?: 'image' | 'raw' | 'auto' },
+): Promise<UploadResult> {
+  if (!isCloudinaryConfigured()) {
+    return { url: MOCK_URL, publicId: options.publicId ?? `mock/${Date.now()}` };
+  }
+
+  const { v2: cloudinary } = (await import('cloudinary')) as { v2: typeof CloudinaryType };
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: options.folder,
+        public_id: options.publicId,
+        resource_type: options.resourceType ?? 'auto',
+      },
+      (err, result) => {
+        if (err || !result) return reject(err ?? new Error('Upload failed'));
+        resolve({ url: result.secure_url, publicId: result.public_id });
+      },
+    );
+    stream.end(buffer);
+  });
+}
+
 export async function uploadSignature(dataUrl: string, folder: string): Promise<UploadResult> {
   if (!isCloudinaryConfigured()) {
     return { url: MOCK_URL, publicId: `mock/sig/${Date.now()}` };

@@ -489,6 +489,48 @@ async function main() {
   }
 
   console.log('🌱 Seed completato con interventi demo');
+
+  // ── AccountingConfig defaults ─────────────────────────────────────────────
+  const accountingDefaults = [
+    { key: 'account.cassa', value: '1100', description: 'Conto cassa', category: 'ACCOUNT' as const },
+    { key: 'account.banca', value: '1020', description: 'Conto banca', category: 'ACCOUNT' as const },
+    { key: 'account.clienti', value: '1100', description: 'Conto clienti', category: 'ACCOUNT' as const },
+    { key: 'account.ricavi.default', value: '3200', description: 'Ricavi default', category: 'ACCOUNT' as const },
+    { key: 'account.ricavi.EXTRA', value: '3200', description: 'Ricavi extra', category: 'ACCOUNT' as const },
+    { key: 'account.ricavi.PICCHETTO', value: '3210', description: 'Ricavi picchetto', category: 'ACCOUNT' as const },
+    { key: 'account.ricavi.REGIA', value: '3220', description: 'Ricavi regia', category: 'ACCOUNT' as const },
+    { key: 'account.ricavi.FORFAIT', value: '3200', description: 'Ricavi forfait', category: 'ACCOUNT' as const },
+    { key: 'account.ricavi.STRAORDINARIO', value: '3200', description: 'Ricavi straordinario', category: 'ACCOUNT' as const },
+    { key: 'account.ricavi.TRASFERTA', value: '3300', description: 'Ricavi trasferta', category: 'ACCOUNT' as const },
+    { key: 'account.ricavi.EMERGENZA', value: '3210', description: 'Ricavi emergenza', category: 'ACCOUNT' as const },
+    { key: 'account.materiali', value: '3400', description: 'Ricavi materiali', category: 'ACCOUNT' as const },
+    { key: 'vat.STANDARD', value: 'IP81', description: 'IVA standard 8.1%', category: 'VAT_CODE' as const },
+    { key: 'vat.RIDOTTA', value: 'IP26', description: 'IVA ridotta 2.6%', category: 'VAT_CODE' as const },
+    { key: 'vat.ALLOGGIO', value: 'IP38', description: 'IVA alloggio 3.8%', category: 'VAT_CODE' as const },
+    { key: 'vat.ESENTE', value: 'IP00', description: 'IVA esente', category: 'VAT_CODE' as const },
+    { key: 'costCenter.EXTRA', value: 'EXTRA', description: 'Centro di costo Extra', category: 'COST_CENTER' as const },
+    { key: 'costCenter.PICCHETTO', value: 'PICCHETTO', description: 'Centro di costo Picchetto', category: 'COST_CENTER' as const },
+    { key: 'costCenter.REGIA', value: 'REGIA', description: 'Centro di costo Regia', category: 'COST_CENTER' as const },
+    { key: 'costCenter.FORFAIT', value: 'FORFAIT', description: 'Centro di costo Forfait', category: 'COST_CENTER' as const },
+    { key: 'costCenter.STRAORDINARIO', value: 'STRAORDINARIO', description: 'Centro di costo Straordinario', category: 'COST_CENTER' as const },
+    { key: 'costCenter.EMERGENZA', value: 'EMERGENZA', description: 'Centro di costo Emergenza', category: 'COST_CENTER' as const },
+    { key: 'costCenter.TRASFERTA', value: 'TRASFERTA', description: 'Centro di costo Trasferta', category: 'COST_CENTER' as const },
+    { key: 'costCenter.ORDINARIO', value: 'ORDINARIO', description: 'Centro di costo Ordinario', category: 'COST_CENTER' as const },
+    { key: 'general.currency', value: 'CHF', description: 'Valuta', category: 'GENERAL' as const },
+    { key: 'general.dateFormat', value: 'DD.MM.YYYY', description: 'Formato data', category: 'GENERAL' as const },
+    { key: 'general.csvSeparator', value: ';', description: 'Separatore CSV', category: 'GENERAL' as const },
+    { key: 'general.csvEncoding', value: 'utf-8-bom', description: 'Encoding CSV', category: 'GENERAL' as const },
+  ];
+
+  for (const config of accountingDefaults) {
+    await prisma.accountingConfig.upsert({
+      where: { key: config.key },
+      update: {},
+      create: config,
+    });
+  }
+
+  console.log('🌱 AccountingConfig defaults seeded');
 }
 
 main()
