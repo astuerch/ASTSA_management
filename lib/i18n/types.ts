@@ -78,6 +78,19 @@ export interface Messages {
   'qrBill.currency': string;
   'qrBill.amount': string;
   'qrBill.acceptancePoint': string;
+  'sage.export.title': string;
+  'sage.export.batch': string;
+  'sage.export.generate': string;
+  'sage.export.download': string;
+  'sage.export.confirm': string;
+  'sage.export.cancel': string;
+  'sage.config.title': string;
+  'sage.config.account': string;
+  'sage.config.vatCode': string;
+  'sage.config.costCenter': string;
+  'sage.export.status.generated': string;
+  'sage.export.status.confirmed': string;
+  'sage.export.status.cancelled': string;
 }
 
 export type Locale = 'it' | 'de-ch';

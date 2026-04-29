@@ -27,7 +27,7 @@ export default async function InvoicesPage() {
 
   const invoices = await prisma.invoiceDraft.findMany({
     orderBy: { createdAt: 'desc' },
-    include: { client: true },
+    include: { client: true, exportBatch: true },
   });
 
   return (
@@ -52,13 +52,14 @@ export default async function InvoicesPage() {
               <TableHead>Scadenza</TableHead>
               <TableHead>Totale CHF</TableHead>
               <TableHead>Stato</TableHead>
+              <TableHead>Batch export</TableHead>
               <TableHead>Azioni</TableHead>
             </tr>
           </thead>
           <tbody>
             {invoices.length === 0 && (
               <tr>
-                <TableCell colSpan={8} className="text-center text-gray-500 py-8">
+                <TableCell colSpan={9} className="text-center text-gray-500 py-8">
                   Nessuna bozza fattura trovata.
                 </TableCell>
               </tr>
@@ -84,6 +85,15 @@ export default async function InvoicesPage() {
                   <Link href={`/dashboard/invoices/${inv.id}`}>
                     <Button className="text-xs px-2 py-1 h-7">Apri</Button>
                   </Link>
+                </TableCell>
+                <TableCell>
+                  {inv.exportBatch ? (
+                    <Link href={`/dashboard/sage/exports/${inv.exportBatch.id}`} className="font-mono text-xs text-blue-600 hover:underline">
+                      {inv.exportBatch.batchNumber}
+                    </Link>
+                  ) : (
+                    <span className="text-gray-400 text-xs">—</span>
+                  )}
                 </TableCell>
               </tr>
             ))}

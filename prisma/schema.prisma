@@ -56,22 +56,17 @@ enum VatCode {
   ESENTE
 }
 
-enum SageExportType {
-  CSV
-  EXCEL
-  PDF
-}
-
-enum SageEntityType {
-  INVOICE_DRAFT
-  REPORT
-  CONTRACT_CONTROL
-}
-
 enum SageExportStatus {
-  PENDING
-  COMPLETED
-  FAILED
+  GENERATED
+  CONFIRMED_IMPORT
+  CANCELLED
+}
+
+enum AccountingConfigCategory {
+  ACCOUNT
+  VAT_CODE
+  COST_CENTER
+  GENERAL
 }
 
 enum ClientType {
@@ -135,7 +130,8 @@ model User {
   role            Role     @relation(fields: [roleId], references: [id])
   interventions   Intervention[] @relation("InterventionCreator")
   workerLinks     InterventionWorker[]
-  exports         SageExport[]
+  exports         SageExport[]   @relation("SageExportExporter")
+  importedExports SageExport[]   @relation("SageExportImporter")
   validatedInterventions Intervention[] @relation("InterventionValidator")
   uploadedPhotos  InterventionPhoto[]
   auditLogs       InterventionAuditLog[]
@@ -400,6 +396,7 @@ model InvoiceDraft {
   client               Client             @relation(fields: [clientId], references: [id])
   property             Property?          @relation(fields: [propertyId], references: [id])
   createdBy            User               @relation("InvoiceCreator", fields: [createdById], references: [id])
+  exportBatch          SageExport?        @relation("InvoiceExportBatch", fields: [exportedBatchId], references: [id])
   fromIntervention     Intervention?      @relation(fields: [fromInterventionId], references: [id])
   lines                InvoiceLine[]
 
@@ -510,19 +507,36 @@ model NumberingCounter {
 }
 
 model SageExport {
-  id               Int              @id @default(autoincrement())
-  exportType       SageExportType   @map("export_type")
-  entityType       SageEntityType   @map("entity_type")
-  entityId         Int              @map("entity_id")
-  exportedByUserId Int?             @map("exported_by_user_id")
-  exportedAt       DateTime?        @map("exported_at")
-  filePath         String?          @map("file_path")
-  status           SageExportStatus @default(PENDING)
-  failureReason    String?          @map("failure_reason")
-  createdAt        DateTime         @default(now()) @map("created_at")
-  exportedByUser   User?            @relation(fields: [exportedByUserId], references: [id])
+  id               String           @id @default(cuid())
+  batchNumber      String           @unique
+  exportedAt       DateTime         @default(now()) @map("exported_at")
+  exportedById     Int              @map("exported_by_id")
+  exportedBy       User             @relation("SageExportExporter", fields: [exportedById], references: [id])
+  invoiceCount     Int              @map("invoice_count")
+  totalAmountCents Int              @map("total_amount_cents")
+  csvFileName      String           @map("csv_file_name")
+  zipUrl           String?          @map("zip_url")
+  zipPublicId      String?          @map("zip_public_id")
+  status           SageExportStatus @default(GENERATED)
+  importedAt       DateTime?        @map("imported_at")
+  importedById     Int?             @map("imported_by_id")
+  importedBy       User?            @relation("SageExportImporter", fields: [importedById], references: [id])
+  notes            String?
+  invoices         InvoiceDraft[]   @relation("InvoiceExportBatch")
 
   @@map("sage_exports")
+}
+
+model AccountingConfig {
+  id          String                   @id @default(cuid())
+  key         String                   @unique
+  value       String
+  description String?
+  category    AccountingConfigCategory
+  updatedAt   DateTime                 @updatedAt @map("updated_at")
+  updatedById Int?                     @map("updated_by_id")
+
+  @@map("accounting_configs")
 }
 
 model InterventionAuditLog {

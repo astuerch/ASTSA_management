@@ -80,6 +80,19 @@ const deCh: Messages = {
   'qrBill.currency': 'Währung',
   'qrBill.amount': 'Betrag',
   'qrBill.acceptancePoint': 'Annahmestelle',
+  'sage.export.title': 'Infoniqa Export',
+  'sage.export.batch': 'Batch',
+  'sage.export.generate': 'Export generieren',
+  'sage.export.download': 'ZIP herunterladen',
+  'sage.export.confirm': 'Import bestaetigen',
+  'sage.export.cancel': 'Batch stornieren',
+  'sage.config.title': 'Buchhaltungskonfiguration',
+  'sage.config.account': 'Buchungskonten',
+  'sage.config.vatCode': 'MWST-Codes',
+  'sage.config.costCenter': 'Kostenstellen',
+  'sage.export.status.generated': 'Generiert',
+  'sage.export.status.confirmed': 'Importiert',
+  'sage.export.status.cancelled': 'Storniert',
 };
 
 export default deCh;

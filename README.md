@@ -128,3 +128,31 @@ I PDF vengono generati con `@react-pdf/renderer` con:
 Arrotondamento al 5 centesimo (`roundSwiss`). Aliquote: 8.1% standard, 2.6% ridotta, 3.8% alloggio, 0% esente.
 
 Documentazione tecnica completa: [`docs/phase-4a-quotes-invoices.md`](docs/phase-4a-quotes-invoices.md)
+
+## Export contabilità Infoniqa
+
+Il modulo **Phase 4b** consente di esportare le bozze fatture verso **Infoniqa ONE Start** tramite Prima Nota CSV + PDF allegati in un archivio ZIP.
+
+### Funzionalità
+
+| Feature | Path | Ruoli |
+|---|---|---|
+| Lista batch export | `/dashboard/sage/exports` | AMMINISTRAZIONE, DIREZIONE |
+| Nuovo export | `/dashboard/sage/exports/new` | AMMINISTRAZIONE, DIREZIONE |
+| Dettaglio batch | `/dashboard/sage/exports/[id]` | AMMINISTRAZIONE, DIREZIONE |
+| Configurazione contabile | `/dashboard/sage/config` | AMMINISTRAZIONE (edit: DIREZIONE) |
+
+### Workflow export
+
+1. Le fatture in stato `PRONTO_EXPORT` vengono selezionate
+2. Il sistema genera un CSV Prima Nota (14 colonne, UTF-8 BOM, separatore `;`)
+3. I PDF vengono generati per ogni fattura
+4. CSV + PDF vengono compressi in uno ZIP (`sage-export-EXP-YYYY-NNNN.zip`)
+5. Il file viene scaricato automaticamente nel browser
+6. Dopo l'import in Infoniqa, clicca "Conferma import avvenuto" → stato `REGISTRATO_SAGE`
+
+### Numerazione batch
+
+- **Export batch**: `EXP-{ANNO}-{SEQUENZA}` (es. `EXP-2026-0001`)
+
+Documentazione tecnica completa: [`docs/phase-4b-sage-export.md`](docs/phase-4b-sage-export.md)
