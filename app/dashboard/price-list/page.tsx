@@ -109,7 +109,7 @@ export default async function PriceListPage() {
                     </Select>
                     <Input name="category" defaultValue={item.category ?? ''} />
                     <input type="hidden" name="active" value={String(item.active)} />
-                    <Button type="submit" size="sm">Salva</Button>
+                    <Button type="submit">Salva</Button>
                   </form>
                 </TableCell>
                 <TableCell>
