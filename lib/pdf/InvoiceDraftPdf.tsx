@@ -350,7 +350,8 @@ function QRBillSection({
       <View style={styles.qrBillPayment}>
         <Text style={styles.qrBillSectionTitle}>{t('qrBill.payment', locale)}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-          {/* QR placeholder image – in production use the actual QR SVG */}
+          {/* TODO: Replace with actual QR-bill SVG rendering using swissqrbill SVG class */}
+          {/* TODO: Track in issue: https://github.com/astuerch/ASTSA_management/issues */}
           <View style={[styles.qrImage, { backgroundColor: '#F0F0F0', alignItems: 'center', justifyContent: 'center', marginRight: 8 }]}>
             <Text style={{ fontSize: 6, color: colors.mid, textAlign: 'center' }}>QR</Text>
           </View>

@@ -72,8 +72,3 @@ describe('calculateLineAmounts', () => {
     expect(result.netAmountCents).toBe(16250);
   });
 });
-
-// helper
-function roundSwiss(n: number): number {
-  return Math.round(n / 5) * 5;
-}

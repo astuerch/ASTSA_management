@@ -109,7 +109,8 @@ export default async function NewQuotePage() {
               </div>
             </div>
           )}
-          {/* Hidden field for lines JSON - in a real implementation this would be a dynamic form */}
+          {/* TODO: Implement dynamic line entry form (add/remove rows with price-list autocomplete) */}
+          {/* Hidden field for lines JSON - currently static, dynamic editor in future iteration */}
           <input type="hidden" name="linesJson" value="[]" />
           <p className="text-sm text-gray-400 italic">Le righe possono essere aggiunte dopo la creazione nel dettaglio preventivo.</p>
         </Card>

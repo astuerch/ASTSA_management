@@ -49,7 +49,3 @@ describe('vat.calculation – calcoli IVA svizzera', () => {
     expect(result.vatAmountCents).toBe(roundSwiss(Math.round(8150 * 0.081)));
   });
 });
-
-function roundSwiss(n: number): number {
-  return Math.round(n / 5) * 5;
-}
