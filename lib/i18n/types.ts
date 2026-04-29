@@ -53,6 +53,31 @@ export interface Messages {
   'workType.STRAORDINARIO': string;
   'workType.PICCHETTO': string;
   'workType.EMERGENZA': string;
+  'quote.title': string;
+  'quote.validity': string;
+  'invoice.title': string;
+  'invoice.documentDate': string;
+  'invoice.customerNumber': string;
+  'invoice.dueDate': string;
+  'invoice.column.description': string;
+  'invoice.column.quantity': string;
+  'invoice.column.unit': string;
+  'invoice.column.vat': string;
+  'invoice.column.price': string;
+  'invoice.column.discount': string;
+  'invoice.column.amount': string;
+  'invoice.totalNet': string;
+  'invoice.totalVat': string;
+  'invoice.totalGross': string;
+  'invoice.reminderNote': string;
+  'qrBill.receipt': string;
+  'qrBill.payment': string;
+  'qrBill.payableTo': string;
+  'qrBill.reference': string;
+  'qrBill.payableBy': string;
+  'qrBill.currency': string;
+  'qrBill.amount': string;
+  'qrBill.acceptancePoint': string;
 }
 
 export type Locale = 'it' | 'de-ch';

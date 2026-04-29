@@ -14,6 +14,7 @@ export async function createClient(formData: FormData) {
     contactName: formData.get('contactName') ?? '',
     notes: formData.get('notes') ?? '',
     specialConditions: formData.get('specialConditions') ?? '',
+    sageCustomerNumber: formData.get('sageCustomerNumber') ?? '',
   });
 
   if (!parsed.success) {
@@ -35,6 +36,7 @@ export async function updateClient(formData: FormData) {
     contactName: formData.get('contactName') ?? '',
     notes: formData.get('notes') ?? '',
     specialConditions: formData.get('specialConditions') ?? '',
+    sageCustomerNumber: formData.get('sageCustomerNumber') ?? '',
   });
 
   if (!parsed.success || !id) {

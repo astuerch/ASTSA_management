@@ -9,6 +9,7 @@ export const clientSchema = z.object({
   contactName: z.string().optional(),
   notes: z.string().optional(),
   specialConditions: z.string().optional(),
+  sageCustomerNumber: z.string().optional(),
 });
 
 export const propertySchema = z.object({

@@ -1,4 +1,4 @@
-import { PrismaClient, ClientType, ServiceCategory, BillingMode, WorkType, InterventionStatus } from '@prisma/client';
+import { PrismaClient, ClientType, ServiceCategory, BillingMode, WorkType, InterventionStatus, QuoteStatus, InvoiceDraftStatus } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -189,6 +189,301 @@ async function main() {
         materialId: saltMaterial.id,
         quantity: 2,
         unitCostCents: saltMaterial.unitCostCents,
+      },
+    });
+  }
+
+  // ── Price List Items ──────────────────────────────────────────────────────
+
+  const priceListItems = [
+    { code: 'ORE_STD', description: 'Ore lavoro standard', unit: 'h', unitPriceCents: 6500, category: 'lavoro', vatCode: 'STANDARD' as const },
+    { code: 'TINT_MQ', description: 'Tinteggio pareti (per m²)', unit: 'mq', unitPriceCents: 1200, category: 'tinteggio', vatCode: 'STANDARD' as const },
+    { code: 'SGOM_H', description: 'Sgombero per ora', unit: 'h', unitPriceCents: 8500, category: 'sgombero', vatCode: 'STANDARD' as const },
+    { code: 'GIARD_MQ', description: 'Manutenzione giardino (per m²)', unit: 'mq', unitPriceCents: 450, category: 'giardini', vatCode: 'STANDARD' as const },
+    { code: 'NEVE_INT', description: 'Sgombero neve (per intervento)', unit: 'Forfait', unitPriceCents: 15000, category: 'neve_sale', vatCode: 'STANDARD' as const },
+  ];
+
+  for (const item of priceListItems) {
+    await prisma.priceListItem.upsert({
+      where: { code: item.code },
+      update: item,
+      create: item,
+    });
+  }
+
+  // Update demo client with sage customer number
+  await prisma.client.update({
+    where: { id: 1 },
+    data: { sageCustomerNumber: '1383' },
+  });
+
+  // ── Numbering counters ────────────────────────────────────────────────────
+
+  const year = new Date().getFullYear();
+
+  // ── Demo Quotes ───────────────────────────────────────────────────────────
+
+  const existingQuote = await prisma.quote.findFirst({ where: { year } });
+  if (!existingQuote) {
+    await prisma.numberingCounter.upsert({
+      where: { prefix_year: { prefix: 'PR', year } },
+      update: {},
+      create: { prefix: 'PR', year, current: 2 },
+    });
+
+    const q1 = await prisma.quote.create({
+      data: {
+        number: `PR-${year}-0001`,
+        year,
+        sequence: 1,
+        clientId: 1,
+        propertyId: 1,
+        subject: 'Appartamento Signora Demo, Via Roma 2 – Tinteggio completo',
+        status: QuoteStatus.BOZZA,
+        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        locale: 'it',
+        createdById: adminUser.id,
+        subtotalCents: 120000,
+        vatTotalCents: 9720,
+        totalCents: 129720,
+        lines: {
+          create: [
+            {
+              position: 1,
+              description: 'Tinteggio pareti soggiorno (45 mq)',
+              quantity: 45,
+              unit: 'mq',
+              unitPriceCents: 1200,
+              discountCents: 0,
+              vatCode: 'STANDARD',
+              netAmountCents: 54000,
+              vatAmountCents: 4375,
+              totalAmountCents: 58375,
+            },
+            {
+              position: 2,
+              description: 'Tinteggio pareti camera (35 mq)',
+              quantity: 35,
+              unit: 'mq',
+              unitPriceCents: 1200,
+              discountCents: 0,
+              vatCode: 'STANDARD',
+              netAmountCents: 42000,
+              vatAmountCents: 3400,
+              totalAmountCents: 45400,
+            },
+            {
+              position: 3,
+              description: 'Materiali e attrezzatura',
+              quantity: 1,
+              unit: 'Forfait',
+              unitPriceCents: 24000,
+              discountCents: 0,
+              vatCode: 'STANDARD',
+              netAmountCents: 24000,
+              vatAmountCents: 1945,
+              totalAmountCents: 25945,
+            },
+          ],
+        },
+      },
+    });
+
+    await prisma.quote.create({
+      data: {
+        number: `PR-${year}-0002`,
+        year,
+        sequence: 2,
+        clientId: 1,
+        propertyId: 1,
+        subject: 'Sgombero cantina condominiale – via Roma 2',
+        status: QuoteStatus.ACCETTATO,
+        acceptedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        sentAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+        locale: 'it',
+        createdById: adminUser.id,
+        subtotalCents: 85000,
+        vatTotalCents: 6885,
+        totalCents: 91885,
+        lines: {
+          create: [
+            {
+              position: 1,
+              description: 'Ore lavoro sgombero',
+              quantity: 8,
+              unit: 'h',
+              unitPriceCents: 8500,
+              discountCents: 0,
+              vatCode: 'STANDARD',
+              netAmountCents: 68000,
+              vatAmountCents: 5510,
+              totalAmountCents: 73510,
+            },
+            {
+              position: 2,
+              description: 'Smaltimento materiali',
+              quantity: 1,
+              unit: 'Forfait',
+              unitPriceCents: 17000,
+              discountCents: 0,
+              vatCode: 'STANDARD',
+              netAmountCents: 17000,
+              vatAmountCents: 1375,
+              totalAmountCents: 18375,
+            },
+          ],
+        },
+      },
+    });
+
+    // ── Demo Invoice Drafts ──────────────────────────────────────────────────
+
+    await prisma.numberingCounter.upsert({
+      where: { prefix_year: { prefix: 'BZ', year } },
+      update: {},
+      create: { prefix: 'BZ', year, current: 3 },
+    });
+
+    const now = new Date();
+    const due30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    // BZ-0001: from existing extra intervention
+    await prisma.invoiceDraft.create({
+      data: {
+        number: `BZ-${year}-0001`,
+        year,
+        sequence: 1,
+        clientId: 1,
+        propertyId: 1,
+        subject: `Condominio Centro A – intervento extra #${extraIv.id}`,
+        status: InvoiceDraftStatus.BOZZA,
+        documentDate: now,
+        dueDate: due30,
+        fromInterventionId: extraIv.id,
+        locale: 'it',
+        createdById: adminUser.id,
+        subtotalCents: 13000,
+        vatTotalCents: 1055,
+        totalCents: 14055,
+        lines: {
+          create: [
+            {
+              position: 1,
+              description: 'Ore lavoro – Condominio Centro A',
+              quantity: 2,
+              unit: 'h',
+              unitPriceCents: 6500,
+              discountCents: 0,
+              vatCode: 'STANDARD',
+              source: 'INTERVENTION_HOURS',
+              sourceRefId: String(extraIv.id),
+              netAmountCents: 13000,
+              vatAmountCents: 1055,
+              totalAmountCents: 14055,
+            },
+          ],
+        },
+      },
+    });
+
+    // BZ-0002: from accepted quote (q1)
+    await prisma.invoiceDraft.create({
+      data: {
+        number: `BZ-${year}-0002`,
+        year,
+        sequence: 2,
+        clientId: 1,
+        propertyId: 1,
+        subject: 'Appartamento Signora Demo, Via Roma 2 – Tinteggio completo',
+        status: InvoiceDraftStatus.PRONTO_EXPORT,
+        documentDate: now,
+        dueDate: due30,
+        fromQuoteId: q1.id,
+        locale: 'it',
+        createdById: adminUser.id,
+        subtotalCents: 120000,
+        vatTotalCents: 9720,
+        totalCents: 129720,
+        lines: {
+          create: [
+            {
+              position: 1,
+              description: 'Tinteggio pareti soggiorno (45 mq)',
+              quantity: 45,
+              unit: 'mq',
+              unitPriceCents: 1200,
+              discountCents: 0,
+              vatCode: 'STANDARD',
+              source: 'QUOTE_LINE',
+              netAmountCents: 54000,
+              vatAmountCents: 4375,
+              totalAmountCents: 58375,
+            },
+            {
+              position: 2,
+              description: 'Tinteggio pareti camera (35 mq)',
+              quantity: 35,
+              unit: 'mq',
+              unitPriceCents: 1200,
+              discountCents: 0,
+              vatCode: 'STANDARD',
+              source: 'QUOTE_LINE',
+              netAmountCents: 42000,
+              vatAmountCents: 3400,
+              totalAmountCents: 45400,
+            },
+            {
+              position: 3,
+              description: 'Materiali e attrezzatura',
+              quantity: 1,
+              unit: 'Forfait',
+              unitPriceCents: 24000,
+              discountCents: 0,
+              vatCode: 'STANDARD',
+              source: 'QUOTE_LINE',
+              netAmountCents: 24000,
+              vatAmountCents: 1945,
+              totalAmountCents: 25945,
+            },
+          ],
+        },
+      },
+    });
+
+    // BZ-0003: manual
+    await prisma.invoiceDraft.create({
+      data: {
+        number: `BZ-${year}-0003`,
+        year,
+        sequence: 3,
+        clientId: 1,
+        propertyId: 1,
+        subject: 'Lavori a regia – supplemento picchetto notturno',
+        status: InvoiceDraftStatus.BOZZA,
+        documentDate: now,
+        dueDate: due30,
+        locale: 'it',
+        createdById: adminUser.id,
+        subtotalCents: 32500,
+        vatTotalCents: 2635,
+        totalCents: 35135,
+        lines: {
+          create: [
+            {
+              position: 1,
+              description: 'Picchetto notturno (5h × tariffa)',
+              quantity: 5,
+              unit: 'h',
+              unitPriceCents: 6500,
+              discountCents: 0,
+              vatCode: 'STANDARD',
+              source: 'MANUAL',
+              netAmountCents: 32500,
+              vatAmountCents: 2635,
+              totalAmountCents: 35135,
+            },
+          ],
+        },
       },
     });
   }

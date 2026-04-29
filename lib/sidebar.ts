@@ -23,6 +23,9 @@ export const sidebarItems: SidebarItem[] = [
   { href: '/dashboard/services', label: 'Servizi', minRole: 'AMMINISTRAZIONE' },
   { href: '/dashboard/materials', label: 'Materiali', minRole: 'AMMINISTRAZIONE' },
   { href: '/dashboard/reports', label: 'Rapporti', minRole: 'AMMINISTRAZIONE' },
+  { href: '/dashboard/quotes', label: 'Preventivi', minRole: 'AMMINISTRAZIONE' },
+  { href: '/dashboard/invoices', label: 'Bozze fatture', minRole: 'AMMINISTRAZIONE' },
+  { href: '/dashboard/price-list', label: 'Listino prezzi', minRole: 'AMMINISTRAZIONE' },
   { href: '/dashboard/kpi', label: 'Dashboard KPI', minRole: 'DIREZIONE' },
 ];
 
