@@ -107,8 +107,7 @@ export function ConfigTable({ configs, canEdit }: ConfigTableProps) {
                                 setEditing(null);
                                 setValues((prev) => ({ ...prev, [config.id]: config.value }));
                               }}
-                              variant="outline"
-                              className="text-xs px-2 py-1 h-7"
+                              className="text-xs px-2 py-1 h-7 bg-white text-slate-900 border border-slate-300 hover:bg-slate-50"
                             >
                               Annulla
                             </Button>
@@ -116,8 +115,7 @@ export function ConfigTable({ configs, canEdit }: ConfigTableProps) {
                         ) : (
                           <Button
                             onClick={() => setEditing(config.id)}
-                            variant="outline"
-                            className="text-xs px-2 py-1 h-7"
+                            className="text-xs px-2 py-1 h-7 bg-white text-slate-900 border border-slate-300 hover:bg-slate-50"
                           >
                             Modifica
                           </Button>
