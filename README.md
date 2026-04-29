@@ -79,6 +79,7 @@ Tutti i rapporti generati vengono archiviati in `/dashboard/reports`.
 | `CLOUDINARY_CLOUD_NAME` | ❌ | Nome cloud Cloudinary (opzionale, mock in dev) |
 | `CLOUDINARY_API_KEY` | ❌ | API key Cloudinary |
 | `CLOUDINARY_API_SECRET` | ❌ | API secret Cloudinary |
+| `MINDEE_API_KEY` | ❌ | OCR Mindee per Phase 4c. Senza chiave, attivo il fallback mock |
 
 ### Setup Cloudinary (gratuito)
 1. Registra un account free su [cloudinary.com](https://cloudinary.com/users/register/free)
@@ -156,3 +157,20 @@ Il modulo **Phase 4b** consente di esportare le bozze fatture verso **Infoniqa O
 - **Export batch**: `EXP-{ANNO}-{SEQUENZA}` (es. `EXP-2026-0001`)
 
 Documentazione tecnica completa: [`docs/phase-4b-sage-export.md`](docs/phase-4b-sage-export.md)
+
+## Documenti in entrata (OCR Mindee)
+
+Il modulo **Phase 4c** acquisisce fatture fornitori, ricevute e bolle relative
+a lavori EXTRA, con OCR automatico via Mindee, validazione admin e export CSV.
+
+| Feature | Path | Ruoli |
+|---|---|---|
+| Lista documenti | `/dashboard/documents` | AMMINISTRAZIONE, DIREZIONE |
+| Validazione documento | `/dashboard/documents/[id]` | AMMINISTRAZIONE, DIREZIONE |
+| Mobile scan | `/work/scan` | DIPENDENTE+ |
+| Export CSV | `/api/documents/export.csv` | AMMINISTRAZIONE, DIREZIONE |
+
+Senza `MINDEE_API_KEY` configurata, l'app usa un fallback mock con dati demo,
+così sviluppo e CI funzionano senza chiavi reali.
+
+Documentazione tecnica completa: [`docs/phase-4c-ocr-documents.md`](docs/phase-4c-ocr-documents.md)

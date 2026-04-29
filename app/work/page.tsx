@@ -94,6 +94,16 @@ export default async function WorkHomePage() {
           </div>
         </Card>
       )}
+
+      <Card>
+        <h3 className="mb-3 font-semibold text-slate-700">Documenti</h3>
+        <Link href="/work/scan">
+          <Button className="h-14 w-full bg-slate-700 text-base">📄 Scansiona documento</Button>
+        </Link>
+        <p className="mt-2 text-xs text-slate-500">
+          Fattura fornitore, ricevuta o bolla di consegna per lavori EXTRA.
+        </p>
+      </Card>
     </div>
   );
 }

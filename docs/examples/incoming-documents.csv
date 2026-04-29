@@ -1,0 +1,4 @@
+﻿ID;Tipo;Stato;DataDocumento;Scadenza;Fornitore;PartitaIVA;NumeroDocumento;Valuta;Imponibile;IVA;Totale;IBAN;Categoria;Cliente;Stabile;InterventoCollegato;FileUrl;Note
+ckxd001abc;FATTURA_FORNITORE;PRONTO_EXPORT;12.04.2026;12.05.2026;Migros Lugano SA;CHE-105.823.541;F-2026-00123;CHF;92.50;7.50;100.00;CH9300762011623852957;materiali;Studio Rossi SA;Via Nassa 5;42;https://res.cloudinary.com/astsa/incoming-documents/abc.pdf;
+ckxd002def;RICEVUTA;PRONTO_EXPORT;13.04.2026;;Tamoil Lugano;;456789;CHF;78.20;6.30;84.50;;carburante;;;;https://res.cloudinary.com/astsa/incoming-documents/def.jpg;rifornimento furgone
+ckxd003ghi;BOLLA_CONSEGNA;VALIDATO;14.04.2026;;Sanitas Materials AG;CHE-200.111.222;BO-33421;CHF;142.00;11.50;153.50;;materiali;Studio Rossi SA;Via Nassa 5;;https://res.cloudinary.com/astsa/incoming-documents/ghi.pdf;

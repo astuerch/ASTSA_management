@@ -8,7 +8,7 @@ import { getNextNumber, formatNumber } from '@/lib/numbering';
 import { buildPrimaNotaCSV } from '@/lib/sage/csv-builder';
 import { buildExportZip } from '@/lib/sage/zip-builder';
 import { invalidateCache } from '@/lib/accounting/config';
-import { InvoiceDraftStatus, SageExportStatus } from '@prisma/client';
+import { InvoiceDraftStatus, SageExportStatus, VatCode } from '@prisma/client';
 import { uploadBuffer } from '@/lib/cloudinary';
 
 async function requireAdmin() {
@@ -50,7 +50,7 @@ async function generateInvoicePdf(inv: {
     unit: string;
     unitPriceCents: number;
     discountCents: number;
-    vatCode: string;
+    vatCode: VatCode;
     netAmountCents: number;
     vatAmountCents: number;
     totalAmountCents: number;
@@ -83,8 +83,8 @@ async function generateInvoicePdf(inv: {
     totalCents: inv.totalCents,
   };
 
-  const element = React.createElement(InvoiceDraftPdf, { data: pdfData }) as React.ReactElement<unknown>;
-  return Buffer.from(await renderToBuffer(element));
+  const element = React.createElement(InvoiceDraftPdf, { data: pdfData });
+  return Buffer.from(await renderToBuffer(element as unknown as Parameters<typeof renderToBuffer>[0]));
 }
 
 export async function generateExport(invoiceIds: string[]) {

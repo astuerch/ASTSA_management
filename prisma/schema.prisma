@@ -138,6 +138,8 @@ model User {
   generatedReports GeneratedReport[]
   quotes           Quote[]          @relation("QuoteCreator")
   invoiceDrafts    InvoiceDraft[]   @relation("InvoiceCreator")
+  uploadedDocuments  IncomingDocument[] @relation("IncomingDocumentCreator")
+  validatedDocuments IncomingDocument[] @relation("IncomingDocumentValidator")
 
   @@map("users")
 }
@@ -159,6 +161,7 @@ model Client {
   contracts         CustodyContract[]
   invoiceDrafts     InvoiceDraft[]
   quotes            Quote[]
+  incomingDocuments IncomingDocument[]
 
   @@map("clients")
 }
@@ -178,6 +181,7 @@ model Property {
   interventions       Intervention[]
   quotes              Quote[]
   invoiceDrafts       InvoiceDraft[]
+  incomingDocuments   IncomingDocument[]
 
   @@index([clientId], map: "idx_properties_client_id")
   @@map("properties")
@@ -274,6 +278,7 @@ model Intervention {
   report             WorkReport?
   invoiceDrafts      InvoiceDraft[]
   auditLogs          InterventionAuditLog[]
+  incomingDocuments  IncomingDocument[]
 
   @@index([propertyId], map: "idx_interventions_property_id")
   @@index([readyForSage], map: "idx_interventions_ready_for_sage")
@@ -580,4 +585,64 @@ model GeneratedReport {
   @@index([kind], map: "idx_generated_reports_kind")
   @@index([generatedById], map: "idx_generated_reports_generated_by")
   @@map("generated_reports")
+}
+
+enum IncomingDocumentType {
+  FATTURA_FORNITORE
+  RICEVUTA
+  BOLLA_CONSEGNA
+  PREVENTIVO_RICEVUTO
+}
+
+enum IncomingDocumentStatus {
+  DA_VALIDARE
+  VALIDATO
+  PRONTO_EXPORT
+  SCARTATO
+}
+
+model IncomingDocument {
+  id              String                 @id @default(cuid())
+  type            IncomingDocumentType
+  status          IncomingDocumentStatus @default(DA_VALIDARE)
+  fileUrl         String                 @map("file_url")
+  filePublicId   String?                @map("file_public_id")
+  mimeType        String?                @map("mime_type")
+  rawOcrData      String?                @map("raw_ocr_data")
+  extracted       String?
+  verifiedData    String?                @map("verified_data")
+  ocrConfidence   Float?                 @map("ocr_confidence")
+  ocrProvider     String?                @map("ocr_provider")
+  supplierName    String?                @map("supplier_name")
+  supplierVat     String?                @map("supplier_vat")
+  docNumber       String?                @map("doc_number")
+  docDate         DateTime?              @map("doc_date")
+  dueDate         DateTime?              @map("due_date")
+  currency        String?                @default("CHF")
+  subtotalCents   Int?                   @map("subtotal_cents")
+  vatCents        Int?                   @map("vat_cents")
+  totalCents      Int?                   @map("total_cents")
+  iban            String?
+  clientId        Int?                   @map("client_id")
+  propertyId      Int?                   @map("property_id")
+  interventionId  Int?                   @map("intervention_id")
+  category        String?
+  notes           String?
+  discardReason   String?                @map("discard_reason")
+  createdById     Int                    @map("created_by_id")
+  validatedById   Int?                   @map("validated_by_id")
+  validatedAt     DateTime?              @map("validated_at")
+  createdAt       DateTime               @default(now()) @map("created_at")
+  updatedAt       DateTime               @updatedAt @map("updated_at")
+  createdBy       User                   @relation("IncomingDocumentCreator", fields: [createdById], references: [id])
+  validatedBy     User?                  @relation("IncomingDocumentValidator", fields: [validatedById], references: [id])
+  client          Client?                @relation(fields: [clientId], references: [id])
+  property        Property?              @relation(fields: [propertyId], references: [id])
+  intervention    Intervention?          @relation(fields: [interventionId], references: [id])
+
+  @@index([status], map: "idx_incoming_documents_status")
+  @@index([type], map: "idx_incoming_documents_type")
+  @@index([docDate], map: "idx_incoming_documents_doc_date")
+  @@index([clientId], map: "idx_incoming_documents_client_id")
+  @@map("incoming_documents")
 }
