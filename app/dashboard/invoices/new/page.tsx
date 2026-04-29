@@ -34,6 +34,7 @@ export default async function NewInvoicePage() {
       documentDate: new Date(String(formData.get('documentDate'))),
       dueDate: new Date(String(formData.get('dueDate'))),
       notes: String(formData.get('notes') ?? ''),
+      paymentTermsDays: formData.get('paymentTermsDays') ? parseInt(String(formData.get('paymentTermsDays')), 10) : 30,
       locale: (formData.get('locale') as 'it' | 'de-ch') ?? 'it',
       lines: [],
     });
