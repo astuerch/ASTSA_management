@@ -83,7 +83,9 @@ Tutti i rapporti generati vengono archiviati in `/dashboard/reports`.
 | `RESEND_API_KEY` | ❌ | Provider email Phase 6. Senza chiave, attivo il fallback mock |
 | `EMAIL_FROM` | con Resend | Sender, es. `ASTSA <info@astsa.ch>` (dominio verificato) |
 | `EMAIL_BCC_ADMIN` | ❌ | BCC automatica su ogni invio, es. `amministrazione@astsa.ch` |
+| `EMAIL_TO_ADMIN` | ❌ | Recipient alert auto-trigger (Phase 6 PR #9). Fallback su `EMAIL_BCC_ADMIN`. |
 | `SAFE_EMAIL_ONLY` | ❌ | Allow-list invii per dev/staging, es. `@astsa.local` |
+| `CRON_SECRET` | consigliata | Bearer secret per Vercel Cron `/api/cron/email-retry` |
 
 ### Setup Cloudinary (gratuito)
 1. Registra un account free su [cloudinary.com](https://cloudinary.com/users/register/free)
@@ -212,3 +214,20 @@ Safety guard `SAFE_EMAIL_ONLY` per evitare invii accidentali in dev/staging.
 Templates IT / DE-CH (senza "ß").
 
 Documentazione tecnica completa: [`docs/phase-6a-email.md`](docs/phase-6a-email.md)
+
+## Auto-notifiche, reminder e retry
+
+Il modulo **Phase 6 PR #9** aggiunge automazione email su 4 eventi chiave del
+workflow, reminder scadenza fattura manuale, e retry queue con cron orario.
+
+| Evento | Trigger automatico | Tipo log |
+|---|---|---|
+| Intervento EXTRA chiuso | `stopIntervention` | `ADMIN_ALERT_INTERVENTION_EXTRA_CLOSED` |
+| Preventivo ACCETTATO | `markAsAccepted` | `ADMIN_ALERT_QUOTE_ACCEPTED` |
+| Bozza fattura PRONTO_EXPORT | `markReadyForExport` | `ADMIN_ALERT_INVOICE_READY_EXPORT` |
+| Documento OCR caricato | `uploadIncomingDocument` | `ADMIN_ALERT_OCR_DOC_TO_VALIDATE` |
+
+Cron `0 * * * *` su `/api/cron/email-retry` riprova le email fallite con
+backoff 1h → 4h → 16h, max 3 retry. Bottone "Riinvia" manuale nel log.
+
+Documentazione tecnica completa: [`docs/phase-6b-automation.md`](docs/phase-6b-automation.md)

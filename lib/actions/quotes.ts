@@ -7,6 +7,7 @@ import { auth } from '@/lib/auth';
 import { canAccessRole } from '@/lib/permissions';
 import { getNextNumber, formatNumber } from '@/lib/numbering';
 import { calculateLineAmounts } from '@/lib/swiss-rounding';
+import { notifyQuoteAccepted } from '@/lib/email/notifications';
 import { QuoteStatus, VatCode } from '@prisma/client';
 
 // ─── Zod Schemas ────────────────────────────────────────────────────────────
@@ -171,7 +172,7 @@ export async function markAsSent(id: string) {
 }
 
 export async function markAsAccepted(id: string) {
-  await requireAdmin();
+  const user = await requireAdmin();
   const existing = await prisma.quote.findUniqueOrThrow({ where: { id } });
   if (existing.status !== QuoteStatus.INVIATO) {
     throw new Error('Solo i preventivi inviati possono essere marcati come accettati');
@@ -180,6 +181,10 @@ export async function markAsAccepted(id: string) {
     where: { id },
     data: { status: QuoteStatus.ACCETTATO, acceptedAt: new Date() },
   });
+
+  // Auto-trigger Phase 6: alert admin "prepara bozza fattura"
+  await notifyQuoteAccepted(id, parseInt(user.id, 10));
+
   revalidatePath(`/dashboard/quotes/${id}`);
 }
 

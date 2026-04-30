@@ -651,6 +651,11 @@ model IncomingDocument {
 enum EmailLogType {
   INTERVENTION_REPORT
   QUOTE
+  INVOICE_REMINDER
+  ADMIN_ALERT_INTERVENTION_EXTRA_CLOSED
+  ADMIN_ALERT_QUOTE_ACCEPTED
+  ADMIN_ALERT_INVOICE_READY_EXPORT
+  ADMIN_ALERT_OCR_DOC_TO_VALIDATE
 }
 
 enum EmailLogStatus {
@@ -670,13 +675,19 @@ model EmailLog {
   errorMessage      String?        @map("error_message")
   providerMessageId String?        @map("provider_message_id")
   attachmentName    String?        @map("attachment_name")
+  retryCount        Int            @default(0) @map("retry_count")
+  nextRetryAt       DateTime?      @map("next_retry_at")
+  parentLogId       String?        @map("parent_log_id")
   sentById          Int            @map("sent_by_id")
   sentBy            User           @relation(fields: [sentById], references: [id])
+  parentLog         EmailLog?      @relation("EmailLogRetryChain", fields: [parentLogId], references: [id])
+  retries           EmailLog[]     @relation("EmailLogRetryChain")
   sentAt            DateTime       @default(now()) @map("sent_at")
 
   @@index([type], map: "idx_email_logs_type")
   @@index([status], map: "idx_email_logs_status")
   @@index([sentAt], map: "idx_email_logs_sent_at")
   @@index([referenceId], map: "idx_email_logs_reference_id")
+  @@index([nextRetryAt], map: "idx_email_logs_next_retry_at")
   @@map("email_logs")
 }

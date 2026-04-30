@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { auth, requireRole } from '@/lib/auth';
 import { uploadBuffer } from '@/lib/cloudinary';
+import { notifyOcrDocToValidate } from '@/lib/email/notifications';
 import { extractDocument } from '@/lib/ocr/provider';
 import type { ExtractedDocument, OcrDocumentKind } from '@/lib/ocr/types';
 import { prisma } from '@/lib/prisma';
@@ -106,6 +107,10 @@ async function uploadIncomingDocumentCore(formData: FormData): Promise<string> {
       createdById: userId,
     },
   });
+
+  // Auto-trigger Phase 6: notifica admin che c'è un documento da validare.
+  // Non blocca mai il flusso di upload (notifyOcrDocToValidate cattura tutti gli errori).
+  await notifyOcrDocToValidate(created.id, userId);
 
   revalidatePath('/dashboard/documents');
   return created.id;

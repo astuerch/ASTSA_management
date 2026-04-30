@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { canAccessRole } from '@/lib/permissions';
 import { calculateDurationMinutes } from '@/lib/time';
+import { notifyInterventionExtraClosed } from '@/lib/email/notifications';
 import { WorkType, InterventionStatus, PhotoKind } from '@prisma/client';
 
 // ─── Internal Zod Schemas ────────────────────────────────────────────────────
@@ -169,6 +170,12 @@ export async function stopIntervention(interventionId: number, formData: FormDat
       endLng: data.endLng,
     },
   });
+
+  // Auto-trigger Phase 6: alert admin per interventi EXTRA chiusi.
+  // Non blocca mai il flusso: notifyInterventionExtraClosed cattura tutti gli errori.
+  if (intervention.isExtra) {
+    await notifyInterventionExtraClosed(interventionId, userId);
+  }
 
   revalidatePath('/work');
   revalidatePath('/dashboard/interventions');

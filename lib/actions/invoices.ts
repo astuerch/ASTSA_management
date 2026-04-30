@@ -7,6 +7,7 @@ import { auth } from '@/lib/auth';
 import { canAccessRole } from '@/lib/permissions';
 import { getNextNumber, formatNumber } from '@/lib/numbering';
 import { calculateLineAmounts, roundSwiss } from '@/lib/swiss-rounding';
+import { notifyInvoiceReadyExport } from '@/lib/email/notifications';
 import { InvoiceDraftStatus, VatCode, InvoiceLineSource } from '@prisma/client';
 
 // ─── Zod Schemas ────────────────────────────────────────────────────────────
@@ -336,7 +337,7 @@ export async function deleteLine(invoiceId: string, lineId: string) {
 }
 
 export async function markReadyForExport(id: string) {
-  await requireAdmin();
+  const user = await requireAdmin();
   const existing = await prisma.invoiceDraft.findUniqueOrThrow({ where: { id } });
   if (existing.status !== InvoiceDraftStatus.BOZZA) {
     throw new Error('Solo le bozze in lavorazione possono essere marcate pronte per export');
@@ -345,6 +346,10 @@ export async function markReadyForExport(id: string) {
     where: { id },
     data: { status: InvoiceDraftStatus.PRONTO_EXPORT },
   });
+
+  // Auto-trigger Phase 6: alert admin "pronta per Infoniqa"
+  await notifyInvoiceReadyExport(id, parseInt(user.id, 10));
+
   revalidatePath(`/dashboard/invoices/${id}`);
 }
 

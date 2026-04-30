@@ -6,8 +6,10 @@ import React from 'react';
 import { z } from 'zod';
 import { requireRole } from '@/lib/auth';
 import { sendEmail } from '@/lib/email/provider';
+import { nextRetryAtFor } from '@/lib/email/retry';
 import {
   buildInterventionReportEmail,
+  buildInvoiceReminder,
   buildQuoteEmail,
 } from '@/lib/email/templates';
 import type { EmailLocale } from '@/lib/email/types';
@@ -26,6 +28,12 @@ const sendInterventionReportSchema = z.object({
 
 const sendQuoteSchema = z.object({
   quoteId: z.string().min(1),
+  locale: z.enum(['it', 'de-ch']).default('it'),
+  recipientOverride: z.string().email().optional().or(z.literal('')),
+});
+
+const sendInvoiceReminderSchema = z.object({
+  invoiceId: z.string().min(1),
   locale: z.enum(['it', 'de-ch']).default('it'),
   recipientOverride: z.string().email().optional().or(z.literal('')),
 });
@@ -126,6 +134,109 @@ export async function sendInterventionReportEmail(formData: FormData) {
   });
 
   revalidatePath(`/dashboard/interventions/${intervention.id}`);
+  revalidatePath('/dashboard/email-log');
+
+  if (!result.success) {
+    throw new Error(`Invio fallito: ${result.errorMessage ?? 'errore sconosciuto'}`);
+  }
+}
+
+export async function retryEmailLog(formData: FormData) {
+  await requireRole(ADMIN_ROLES);
+  const id = String(formData.get('id') ?? '');
+  if (!id) throw new Error('ID log mancante');
+
+  const log = await prisma.emailLog.findUniqueOrThrow({ where: { id } });
+  if (log.status === 'INVIATO') return; // già inviato, no-op
+
+  // Forziamo nextRetryAt = now così il prossimo cron lo prende.
+  // L'admin può sempre triggerare manualmente l'endpoint cron, oppure
+  // attendere il prossimo giro orario.
+  await prisma.emailLog.update({
+    where: { id },
+    data: { nextRetryAt: new Date() },
+  });
+  revalidatePath('/dashboard/email-log');
+}
+
+export async function sendInvoiceReminderEmail(formData: FormData) {
+  const session = await requireRole(ADMIN_ROLES);
+  const userId = Number(session.user?.id);
+  if (!userId) throw new Error('Sessione non valida');
+
+  const parsed = sendInvoiceReminderSchema.safeParse({
+    invoiceId: formData.get('invoiceId'),
+    locale: formData.get('locale') ?? 'it',
+    recipientOverride: formData.get('recipientOverride') ?? '',
+  });
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? 'Dati non validi');
+  }
+  const { invoiceId, locale, recipientOverride } = parsed.data;
+
+  const invoice = await prisma.invoiceDraft.findUnique({
+    where: { id: invoiceId },
+    include: { client: true },
+  });
+  if (!invoice) throw new Error('Bozza fattura non trovata');
+
+  const recipient = recipientOverride || invoice.client.billingEmail;
+  if (!recipient) {
+    throw new Error('Nessuna email cliente: impostala in anagrafica oppure usa override');
+  }
+
+  const totalChf = (invoice.totalCents / 100).toLocaleString('de-CH', {
+    minimumFractionDigits: 2,
+  });
+  const dueDate = invoice.dueDate;
+  const dd = String(dueDate.getDate()).padStart(2, '0');
+  const mm = String(dueDate.getMonth() + 1).padStart(2, '0');
+  const yyyy = dueDate.getFullYear();
+  const dueDateStr = `${dd}.${mm}.${yyyy}`;
+
+  // Calcolo giorni alla scadenza basato su giorno-solare (UTC stripped):
+  // resiste ai cambi DST e a invii in fasce orarie diverse.
+  const today = new Date();
+  const todayUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+  const dueUtc = Date.UTC(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+  const daysToDue = Math.round((dueUtc - todayUtc) / (1000 * 60 * 60 * 24));
+
+  const message = buildInvoiceReminder(locale, {
+    clientName: invoice.client.businessName,
+    invoiceNumber: invoice.number,
+    totalChf,
+    dueDate: dueDateStr,
+    daysToDue,
+  });
+
+  const bcc = buildBccList();
+
+  const result = await sendEmail({
+    to: recipient,
+    bcc: bcc.length > 0 ? bcc : undefined,
+    subject: message.subject,
+    text: message.text,
+    html: message.html,
+  });
+
+  await prisma.emailLog.create({
+    data: {
+      type: 'INVOICE_REMINDER',
+      status: result.success ? 'INVIATO' : 'FALLITO',
+      referenceId: invoice.id,
+      recipientEmail: recipient,
+      ccEmails: bcc.length > 0 ? bcc.join(',') : null,
+      subject: message.subject,
+      locale,
+      errorMessage: result.errorMessage ?? null,
+      providerMessageId: result.messageId ?? null,
+      // Reminder fattura non ha allegati → eligible al retry automatico cron
+      nextRetryAt: result.success ? null : nextRetryAtFor(0),
+      sentById: userId,
+    },
+  });
+
+  revalidatePath(`/dashboard/invoices/${invoice.id}`);
   revalidatePath('/dashboard/email-log');
 
   if (!result.success) {

@@ -7,6 +7,8 @@ import { Table, TableCell, TableHead } from '@/components/ui/table';
 import { requireRole } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { markReadyForExport, cancelInvoice } from '@/lib/actions/invoices';
+import { sendInvoiceReminderEmail } from '@/lib/actions/emails';
+import { SendEmailForm } from '@/components/email/send-email-form';
 import { redirect } from 'next/navigation';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -99,6 +101,17 @@ export default async function InvoiceDetailPage({ params }: Props) {
           </form>
         )}
       </div>
+
+      {(invoice.status === 'PRONTO_EXPORT' ||
+        invoice.status === 'ESPORTATO' ||
+        invoice.status === 'REGISTRATO_SAGE') && (
+        <SendEmailForm
+          action={sendInvoiceReminderEmail}
+          hiddenFields={{ invoiceId: invoice.id }}
+          defaultRecipient={invoice.client.billingEmail}
+          buttonLabel="Invia promemoria scadenza al cliente"
+        />
+      )}
 
       {/* Warning for missing sage customer number */}
       {!invoice.client.sageCustomerNumber && (

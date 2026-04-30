@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Table, TableCell, TableHead } from '@/components/ui/table';
+import { retryEmailLog } from '@/lib/actions/emails';
 import { requireRole } from '@/lib/auth';
 import { isResendConfigured, isSafetyGuardActive } from '@/lib/email/provider';
 import { prisma } from '@/lib/prisma';
@@ -109,12 +110,13 @@ export default async function EmailLogPage({
               <TableHead>Lingua</TableHead>
               <TableHead>Stato</TableHead>
               <TableHead>Inviato da</TableHead>
+              <TableHead>Azioni</TableHead>
             </tr>
           </thead>
           <tbody>
             {logs.length === 0 && (
               <tr>
-                <TableCell colSpan={8} className="py-6 text-center text-slate-500">
+                <TableCell colSpan={9} className="py-6 text-center text-slate-500">
                   Nessun invio registrato.
                 </TableCell>
               </tr>
@@ -142,9 +144,27 @@ export default async function EmailLogPage({
                     {log.errorMessage && (
                       <p className="mt-1 text-xs text-red-600">{log.errorMessage}</p>
                     )}
+                    {log.status === 'FALLITO' && log.retryCount > 0 && (
+                      <p className="mt-1 text-xs text-slate-500">
+                        Retry {log.retryCount}/3
+                        {log.nextRetryAt && (
+                          <> · prossimo: {new Date(log.nextRetryAt).toLocaleString('it-CH')}</>
+                        )}
+                      </p>
+                    )}
                   </TableCell>
                   <TableCell>
                     {log.sentBy.firstName} {log.sentBy.lastName}
+                  </TableCell>
+                  <TableCell>
+                    {log.status === 'FALLITO' && log.retryCount < 3 && (
+                      <form action={retryEmailLog}>
+                        <input type="hidden" name="id" value={log.id} />
+                        <Button type="submit" size="sm" variant="outline">
+                          Riinvia
+                        </Button>
+                      </form>
+                    )}
                   </TableCell>
                 </tr>
               );
