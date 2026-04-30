@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { formatDuration } from '@/lib/time';
 import { validateIntervention, updateInterventionHours } from '@/lib/actions/interventions';
 import { GeneratePdfButton } from '@/components/dashboard/generate-pdf-button';
+import { SendEmailForm } from '@/components/email/send-email-form';
+import { sendInterventionReportEmail } from '@/lib/actions/emails';
 
 const STATUS_LABELS: Record<InterventionStatus, string> = {
   IN_CORSO: 'In corso',
@@ -219,6 +221,14 @@ export default async function InterventionDetailPage({
                 </Button>
               </form>
             )}
+
+            <SendEmailForm
+              action={sendInterventionReportEmail}
+              hiddenFields={{ interventionId: String(iv.id) }}
+              defaultRecipient={iv.property.client?.billingEmail}
+              buttonLabel="Invia rapporto al cliente"
+            />
+
 
             <details className="rounded-md border">
               <summary className="cursor-pointer px-3 py-2 text-sm font-medium">

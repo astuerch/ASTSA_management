@@ -140,6 +140,7 @@ model User {
   invoiceDrafts    InvoiceDraft[]   @relation("InvoiceCreator")
   uploadedDocuments  IncomingDocument[] @relation("IncomingDocumentCreator")
   validatedDocuments IncomingDocument[] @relation("IncomingDocumentValidator")
+  emailsSent         EmailLog[]
 
   @@map("users")
 }
@@ -645,4 +646,37 @@ model IncomingDocument {
   @@index([docDate], map: "idx_incoming_documents_doc_date")
   @@index([clientId], map: "idx_incoming_documents_client_id")
   @@map("incoming_documents")
+}
+
+enum EmailLogType {
+  INTERVENTION_REPORT
+  QUOTE
+}
+
+enum EmailLogStatus {
+  INVIATO
+  FALLITO
+}
+
+model EmailLog {
+  id                String         @id @default(cuid())
+  type              EmailLogType
+  status            EmailLogStatus
+  referenceId       String         @map("reference_id")
+  recipientEmail    String         @map("recipient_email")
+  ccEmails          String?        @map("cc_emails")
+  subject           String
+  locale            String         @default("it")
+  errorMessage      String?        @map("error_message")
+  providerMessageId String?        @map("provider_message_id")
+  attachmentName    String?        @map("attachment_name")
+  sentById          Int            @map("sent_by_id")
+  sentBy            User           @relation(fields: [sentById], references: [id])
+  sentAt            DateTime       @default(now()) @map("sent_at")
+
+  @@index([type], map: "idx_email_logs_type")
+  @@index([status], map: "idx_email_logs_status")
+  @@index([sentAt], map: "idx_email_logs_sent_at")
+  @@index([referenceId], map: "idx_email_logs_reference_id")
+  @@map("email_logs")
 }

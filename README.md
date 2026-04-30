@@ -80,6 +80,10 @@ Tutti i rapporti generati vengono archiviati in `/dashboard/reports`.
 | `CLOUDINARY_API_KEY` | ❌ | API key Cloudinary |
 | `CLOUDINARY_API_SECRET` | ❌ | API secret Cloudinary |
 | `MINDEE_API_KEY` | ❌ | OCR Mindee per Phase 4c. Senza chiave, attivo il fallback mock |
+| `RESEND_API_KEY` | ❌ | Provider email Phase 6. Senza chiave, attivo il fallback mock |
+| `EMAIL_FROM` | con Resend | Sender, es. `ASTSA <info@astsa.ch>` (dominio verificato) |
+| `EMAIL_BCC_ADMIN` | ❌ | BCC automatica su ogni invio, es. `amministrazione@astsa.ch` |
+| `SAFE_EMAIL_ONLY` | ❌ | Allow-list invii per dev/staging, es. `@astsa.local` |
 
 ### Setup Cloudinary (gratuito)
 1. Registra un account free su [cloudinary.com](https://cloudinary.com/users/register/free)
@@ -190,3 +194,21 @@ con il volume corrente). Niente cron, niente snapshot — aggiungeremo
 materializzazione solo se misureremo lentezza vera.
 
 Documentazione tecnica completa: [`docs/phase-5-kpi-dashboard.md`](docs/phase-5-kpi-dashboard.md)
+
+## Invio email rapporti e preventivi
+
+Il modulo **Phase 6 PR #8** abilita l'invio manuale via email di rapporti
+intervento e preventivi al cliente, con allegato PDF generato server-side e
+log di tutti gli invii.
+
+| Feature | Path | Ruoli |
+|---|---|---|
+| Bottone invio rapporto | `/dashboard/interventions/[id]` | AMMINISTRAZIONE, DIREZIONE |
+| Bottone invio preventivo | `/dashboard/quotes/[id]` | AMMINISTRAZIONE, DIREZIONE |
+| Log invii | `/dashboard/email-log` | AMMINISTRAZIONE, DIREZIONE |
+
+Provider Resend con fallback mock se `RESEND_API_KEY` non è configurata.
+Safety guard `SAFE_EMAIL_ONLY` per evitare invii accidentali in dev/staging.
+Templates IT / DE-CH (senza "ß").
+
+Documentazione tecnica completa: [`docs/phase-6a-email.md`](docs/phase-6a-email.md)
