@@ -174,3 +174,19 @@ Senza `MINDEE_API_KEY` configurata, l'app usa un fallback mock con dati demo,
 così sviluppo e CI funzionano senza chiavi reali.
 
 Documentazione tecnica completa: [`docs/phase-4c-ocr-documents.md`](docs/phase-4c-ocr-documents.md)
+
+## Dashboard KPI direzione
+
+Il modulo **Phase 5 PR #8** aggiunge la pagina KPI della direzione con KPI
+top-line del mese corrente vs mese precedente e tre grafici principali
+(trend ore 12 mesi, mix ricavi per WorkType, top 10 stabili per ore).
+
+| Feature | Path | Ruoli |
+|---|---|---|
+| Dashboard KPI | `/dashboard/kpi` | DIREZIONE |
+
+Calcoli live a ogni accesso (Prisma `aggregate` parallele, < 100ms su SQLite
+con il volume corrente). Niente cron, niente snapshot — aggiungeremo
+materializzazione solo se misureremo lentezza vera.
+
+Documentazione tecnica completa: [`docs/phase-5-kpi-dashboard.md`](docs/phase-5-kpi-dashboard.md)
