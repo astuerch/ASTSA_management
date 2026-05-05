@@ -37,6 +37,7 @@ const styles = StyleSheet.create({
   col3: { width: '15%', textAlign: 'right' as const },
   col4: { width: '15%', textAlign: 'right' as const },
   col5: { width: '15%', textAlign: 'right' as const },
+  internalCols: { flexDirection: 'row' as const },
 });
 
 export function InterventionReportPdf({ data, locale, variant }: Props) {
@@ -87,7 +88,7 @@ export function InterventionReportPdf({ data, locale, variant }: Props) {
         />
         <InfoRow
           label={t('report.work_type', locale)}
-          value={t(`workType.${data.workType}`, locale) || data.workType}
+          value={t(`workType.${data.workType}`, locale) || String(data.workType ?? '—')}
         />
         <InfoRow
           label={t('report.workers', locale)}
@@ -96,26 +97,26 @@ export function InterventionReportPdf({ data, locale, variant }: Props) {
 
         {/* Notes */}
         {(data.notes || data.anomaly) && (
-          <>
+          <View>
             <Text style={baseStyles.sectionTitle}>{t('report.notes', locale)}</Text>
             {data.notes && <InfoRow label={t('report.notes', locale)} value={data.notes} />}
             {data.anomaly && <InfoRow label={t('report.anomalies', locale)} value={data.anomaly} />}
-          </>
+          </View>
         )}
 
         {/* Materials */}
         {data.materials.length > 0 && (
-          <>
+          <View>
             <Text style={baseStyles.sectionTitle}>{t('report.materials', locale)}</Text>
             <View style={baseStyles.tableHeader}>
               <Text style={[baseStyles.tableCellBold, styles.col1]}>{t('report.description', locale)}</Text>
               <Text style={[baseStyles.tableCellBold, styles.col2]}>{t('report.unit', locale)}</Text>
               <Text style={[baseStyles.tableCellBold, styles.col3]}>{t('report.quantity', locale)}</Text>
               {isInternal && (
-                <>
+                <View style={styles.internalCols}>
                   <Text style={[baseStyles.tableCellBold, styles.col4]}>{t('report.unit_cost', locale)}</Text>
                   <Text style={[baseStyles.tableCellBold, styles.col5]}>{t('report.subtotal', locale)}</Text>
-                </>
+                </View>
               )}
             </View>
             {data.materials.map((m, i) => {
@@ -123,18 +124,18 @@ export function InterventionReportPdf({ data, locale, variant }: Props) {
               const subtotal = unitCost * m.quantity;
               return (
                 <View key={i} style={baseStyles.tableRow}>
-                  <Text style={[baseStyles.tableCell, styles.col1]}>{m.material.name}</Text>
-                  <Text style={[baseStyles.tableCell, styles.col2]}>{m.material.unit}</Text>
-                  <Text style={[baseStyles.tableCell, styles.col3]}>{m.quantity}</Text>
+                  <Text style={[baseStyles.tableCell, styles.col1]}>{String(m.material.name)}</Text>
+                  <Text style={[baseStyles.tableCell, styles.col2]}>{String(m.material.unit)}</Text>
+                  <Text style={[baseStyles.tableCell, styles.col3]}>{String(m.quantity)}</Text>
                   {isInternal && (
-                    <>
+                    <View style={styles.internalCols}>
                       <Text style={[baseStyles.tableCell, styles.col4]}>
                         CHF {(unitCost / 100).toFixed(2)}
                       </Text>
                       <Text style={[baseStyles.tableCell, styles.col5]}>
                         CHF {(subtotal / 100).toFixed(2)}
                       </Text>
-                    </>
+                    </View>
                   )}
                 </View>
               );
@@ -147,17 +148,17 @@ export function InterventionReportPdf({ data, locale, variant }: Props) {
                 </Text>
               </View>
             )}
-          </>
+          </View>
         )}
 
         {/* Signature */}
         {data.clientSignatureUrl && (
-          <>
+          <View>
             <Text style={baseStyles.sectionTitle}>{t('report.signature', locale)}</Text>
             {data.clientSignerName && (
               <InfoRow label={t('report.signer', locale)} value={data.clientSignerName} />
             )}
-          </>
+          </View>
         )}
 
         {/* Footer */}

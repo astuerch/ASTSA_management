@@ -56,9 +56,11 @@ export async function POST(req: NextRequest) {
     );
     return NextResponse.json(result);
   } catch (err) {
-    return NextResponse.json(
-      { error: (err as Error).message },
-      { status: 400 },
-    );
+    console.error('[outlook-handoff] error:', err);
+    const message = err instanceof Error ? err.message : 'Errore sconosciuto';
+    const userMessage = message.includes('Minified React error')
+      ? 'Errore generazione PDF. Controlla i log server per i dettagli.'
+      : message;
+    return NextResponse.json({ error: userMessage }, { status: 400 });
   }
 }
