@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaLibSQL } from '@prisma/adapter-libsql';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -21,23 +22,22 @@ declare global {
  */
 function createPrismaClient(): PrismaClient {
   const tursoUrl = process.env.TURSO_DATABASE_URL;
+  const tursoAuthToken = process.env.TURSO_AUTH_TOKEN;
 
   if (tursoUrl) {
-    // Importi dinamici: evitano di fare risolvere `@libsql/client` quando
-    // l'app gira in locale senza Turso (e senza la dep installata).
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { createClient } = require('@libsql/client') as typeof import('@libsql/client');
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PrismaLibSQL } = require('@prisma/adapter-libsql') as typeof import('@prisma/adapter-libsql');
+    let host = tursoUrl;
+    try { host = new URL(tursoUrl).host; } catch { /* keep raw value */ }
+    console.log(`[prisma] Using Turso adapter, url=${host}`);
+    console.log(`[prisma] TURSO_AUTH_TOKEN present: ${Boolean(tursoAuthToken)}`);
 
-    const libsqlClient = createClient({
+    const adapter = new PrismaLibSQL({
       url: tursoUrl,
-      authToken: process.env.TURSO_AUTH_TOKEN,
+      authToken: tursoAuthToken,
     });
-    const adapter = new PrismaLibSQL(libsqlClient);
     return new PrismaClient({ adapter });
   }
 
+  console.log('[prisma] Using local SQLite via DATABASE_URL');
   return new PrismaClient();
 }
 

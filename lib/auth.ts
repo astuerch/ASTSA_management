@@ -8,6 +8,7 @@ import { canAccessRole } from '@/lib/permissions';
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
   pages: { signIn: '/login' },
+  debug: process.env.NODE_ENV !== 'production' || process.env.NEXTAUTH_DEBUG === '1',
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -17,29 +18,50 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.warn('[auth] missing credentials');
           return null;
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase() },
-          include: { role: true },
-        });
+        const email = credentials.email.toLowerCase();
 
-        if (!user || !user.isActive || !user.passwordHash) {
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email },
+            include: { role: true },
+          });
+
+          if (!user) {
+            console.warn(`[auth] user not found: ${email}`);
+            return null;
+          }
+
+          if (!user.isActive) {
+            console.warn(`[auth] user inactive: ${email}`);
+            return null;
+          }
+
+          if (!user.passwordHash) {
+            console.warn(`[auth] missing passwordHash: ${email}`);
+            return null;
+          }
+
+          const valid = await bcrypt.compare(credentials.password, user.passwordHash);
+          if (!valid) {
+            console.warn(`[auth] invalid password for: ${email}`);
+            return null;
+          }
+
+          console.log(`[auth] success: ${email} role=${user.role.code}`);
+          return {
+            id: String(user.id),
+            email: user.email,
+            name: `${user.firstName} ${user.lastName}`,
+            role: user.role.code,
+          };
+        } catch (err) {
+          console.error('[auth] error during authorize:', err);
           return null;
         }
-
-        const valid = await bcrypt.compare(credentials.password, user.passwordHash);
-        if (!valid) {
-          return null;
-        }
-
-        return {
-          id: String(user.id),
-          email: user.email,
-          name: `${user.firstName} ${user.lastName}`,
-          role: user.role.code,
-        };
       },
     }),
   ],

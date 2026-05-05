@@ -9,6 +9,9 @@ const nextConfig = {
     'swissqrbill',
     'pdfkit',
     'fontkit',
+    '@libsql/client',
+    '@prisma/adapter-libsql',
+    'libsql',
   ],
 };
 
