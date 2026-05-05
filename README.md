@@ -215,6 +215,23 @@ Templates IT / DE-CH (senza "ß").
 
 Documentazione tecnica completa: [`docs/phase-6a-email.md`](docs/phase-6a-email.md)
 
+## Email cliente: Outlook handoff (no Resend)
+
+Le email ai clienti **non vengono mai spedite dall'app**. L'app prepara la
+bozza in Outlook desktop (subject + body precompilati, PDF scaricato) e
+l'amministrazione invia dal proprio account aziendale dopo aver controllato.
+
+| Bottone | Path | Azione |
+|---|---|---|
+| Prepara email rapporto | `/dashboard/interventions/[id]` | Apre Outlook + scarica PDF rapporto |
+| Prepara email preventivo | `/dashboard/quotes/[id]` | Apre Outlook + scarica PDF preventivo |
+| Prepara promemoria scadenza | `/dashboard/invoices/[id]` | Apre Outlook con messaggio precompilato |
+
+Resend resta usato **solo per gli alert interni** all'amministrazione
+(vedi sotto), non per i clienti.
+
+Documentazione tecnica completa: [`docs/phase-6c-outlook-handoff.md`](docs/phase-6c-outlook-handoff.md)
+
 ## Auto-notifiche, reminder e retry
 
 Il modulo **Phase 6 PR #9** aggiunge automazione email su 4 eventi chiave del

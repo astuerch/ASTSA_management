@@ -19,6 +19,13 @@ const TYPE_LABELS: Record<string, string> = {
 const STATUS_COLORS: Record<string, string> = {
   INVIATO: 'bg-green-100 text-green-700',
   FALLITO: 'bg-red-100 text-red-700',
+  PREPARATO: 'bg-sky-100 text-sky-700',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  INVIATO: 'Inviato (Resend)',
+  FALLITO: 'Fallito',
+  PREPARATO: 'Preparato Outlook',
 };
 
 interface SearchParams {
@@ -90,7 +97,8 @@ export default async function EmailLogPage({
             <Label>Stato</Label>
             <Select name="status" defaultValue={params.status ?? ''}>
               <option value="">Tutti</option>
-              <option value="INVIATO">Inviato</option>
+              <option value="INVIATO">Inviato (Resend)</option>
+              <option value="PREPARATO">Preparato Outlook</option>
               <option value="FALLITO">Fallito</option>
             </Select>
           </div>
@@ -140,7 +148,7 @@ export default async function EmailLogPage({
                   <TableCell className="max-w-md truncate">{log.subject}</TableCell>
                   <TableCell>{log.locale}</TableCell>
                   <TableCell>
-                    <Badge className={STATUS_COLORS[log.status]}>{log.status}</Badge>
+                    <Badge className={STATUS_COLORS[log.status]}>{STATUS_LABELS[log.status] ?? log.status}</Badge>
                     {log.errorMessage && (
                       <p className="mt-1 text-xs text-red-600">{log.errorMessage}</p>
                     )}

@@ -9,8 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatDuration } from '@/lib/time';
 import { validateIntervention, updateInterventionHours } from '@/lib/actions/interventions';
 import { GeneratePdfButton } from '@/components/dashboard/generate-pdf-button';
-import { SendEmailForm } from '@/components/email/send-email-form';
-import { sendInterventionReportEmail } from '@/lib/actions/emails';
+import { OutlookHandoffButton } from '@/components/email/outlook-handoff-button';
 
 const STATUS_LABELS: Record<InterventionStatus, string> = {
   IN_CORSO: 'In corso',
@@ -222,11 +221,11 @@ export default async function InterventionDetailPage({
               </form>
             )}
 
-            <SendEmailForm
-              action={sendInterventionReportEmail}
-              hiddenFields={{ interventionId: String(iv.id) }}
+            <OutlookHandoffButton
+              type="INTERVENTION_REPORT"
+              id={String(iv.id)}
               defaultRecipient={iv.property.client?.billingEmail}
-              buttonLabel="Invia rapporto al cliente"
+              buttonLabel="Prepara email rapporto per Outlook"
             />
 
 

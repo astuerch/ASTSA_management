@@ -10,8 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { requireRole } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { markAsSent, markAsAccepted, markAsRejected, deleteQuote, convertToInvoiceDraft } from '@/lib/actions/quotes';
-import { sendQuoteEmail } from '@/lib/actions/emails';
-import { SendEmailForm } from '@/components/email/send-email-form';
+import { OutlookHandoffButton } from '@/components/email/outlook-handoff-button';
 import { redirect } from 'next/navigation';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -139,11 +138,11 @@ export default async function QuoteDetailPage({ params }: Props) {
         )}
       </div>
 
-      <SendEmailForm
-        action={sendQuoteEmail}
-        hiddenFields={{ quoteId: quote.id }}
+      <OutlookHandoffButton
+        type="QUOTE"
+        id={quote.id}
         defaultRecipient={quote.client.billingEmail}
-        buttonLabel="Invia preventivo al cliente"
+        buttonLabel="Prepara email preventivo per Outlook"
       />
 
       {/* Warning for missing sage customer number */}

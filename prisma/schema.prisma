@@ -661,6 +661,7 @@ enum EmailLogType {
 enum EmailLogStatus {
   INVIATO
   FALLITO
+  PREPARATO
 }
 
 model EmailLog {
