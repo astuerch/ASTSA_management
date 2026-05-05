@@ -73,7 +73,9 @@ Tutti i rapporti generati vengono archiviati in `/dashboard/reports`.
 
 | Variabile | Obbligatoria | Descrizione |
 |---|---|---|
-| `DATABASE_URL` | ✅ | Path SQLite (es. `file:./dev.db`) |
+| `DATABASE_URL` | ✅ | Path SQLite locale (es. `file:./dev.db`). Su Vercel può restare uguale: a runtime viene sovrascritto da `TURSO_DATABASE_URL` se presente |
+| `TURSO_DATABASE_URL` | in produzione | URL libSQL Turso (es. `libsql://astsa-prod-...turso.io`). Se presente, l'app usa Turso invece del file SQLite |
+| `TURSO_AUTH_TOKEN` | con Turso | Token di autenticazione Turso (Bearer). Generato da `turso db tokens create` o dal dashboard |
 | `NEXTAUTH_SECRET` | ✅ | Secret JWT NextAuth |
 | `NEXTAUTH_URL` | ✅ | URL base app (es. `http://localhost:3000`) |
 | `CLOUDINARY_CLOUD_NAME` | ❌ | Nome cloud Cloudinary (opzionale, mock in dev) |
