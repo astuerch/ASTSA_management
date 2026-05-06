@@ -1,4 +1,4 @@
-import { renderToBuffer } from '@react-pdf/renderer';
+import { renderToBuffer, Document, Page, Text } from '@react-pdf/renderer';
 import React from 'react';
 import {
   buildInterventionReportEmail,
@@ -103,12 +103,46 @@ async function prepareInterventionReport(
   });
   if (!iv) throw new Error('Intervento non trovato');
 
-  const element = React.createElement(InterventionReportPdf, {
-    data: iv as Parameters<typeof InterventionReportPdf>[0]['data'],
-    locale,
-    variant: 'client',
-  }) as React.ReactElement;
-  const pdfBuffer = Buffer.from(await renderToBuffer(element));
+  let pdfBuffer: Buffer;
+  try {
+    // Test 1: prova render minimo prima del PDF reale
+    console.log('[outlook-handoff] attempting minimal PDF render test...');
+    const minimalElement = React.createElement(
+      Document,
+      null,
+      React.createElement(Page, { size: 'A4' },
+        React.createElement(Text, null, 'Test minimal PDF')
+      )
+    );
+    await renderToBuffer(minimalElement as React.ReactElement);
+    console.log('[outlook-handoff] minimal PDF render OK');
+
+    // Test 2: render del PDF reale
+    console.log('[outlook-handoff] attempting real PDF render...');
+    console.log('[outlook-handoff] intervention data shape:', {
+      id: iv.id,
+      workType: iv.workType,
+      workTypeType: typeof iv.workType,
+      hasProperty: !!iv.property,
+      hasClient: !!iv.property?.client,
+      materialsCount: iv.materials.length,
+      workersCount: iv.workers.length,
+      photosCount: iv.photos.length,
+      startedAtType: typeof iv.startedAt,
+      startedAtIsDate: iv.startedAt instanceof Date,
+    });
+
+    const element = React.createElement(InterventionReportPdf, {
+      data: iv as Parameters<typeof InterventionReportPdf>[0]['data'],
+      locale,
+      variant: 'client',
+    }) as React.ReactElement;
+    pdfBuffer = Buffer.from(await renderToBuffer(element));
+    console.log('[outlook-handoff] real PDF render OK, bytes:', pdfBuffer.length);
+  } catch (renderErr) {
+    console.error('[outlook-handoff] PDF render failed at:', renderErr instanceof Error ? renderErr.stack : renderErr);
+    throw renderErr;
+  }
 
   const dateStr = formatDateForLocale(iv.startedAt ?? iv.createdAt);
   const durationLabel =
@@ -140,26 +174,47 @@ async function prepareQuote(id: string, locale: EmailLocale): Promise<PreparedEm
   });
   if (!quote) throw new Error('Preventivo non trovato');
 
-  const element = React.createElement(QuotePdf, {
-    data: {
-      number: quote.number,
-      subject: quote.subject,
-      locale: quote.locale,
-      documentDate: quote.createdAt,
-      validUntil: quote.validUntil,
-      notes: quote.notes,
-      client: {
-        businessName: quote.client.businessName,
-        address: quote.client.address,
-        sageCustomerNumber: quote.client.sageCustomerNumber,
+  let pdfBuffer: Buffer;
+  try {
+    // Test 1: prova render minimo prima del PDF reale
+    console.log('[outlook-handoff] attempting minimal PDF render test (quote)...');
+    const minimalElement = React.createElement(
+      Document,
+      null,
+      React.createElement(Page, { size: 'A4' },
+        React.createElement(Text, null, 'Test minimal PDF')
+      )
+    );
+    await renderToBuffer(minimalElement as React.ReactElement);
+    console.log('[outlook-handoff] minimal PDF render OK (quote)');
+
+    // Test 2: render del PDF reale
+    console.log('[outlook-handoff] attempting real PDF render (quote)...');
+    const element = React.createElement(QuotePdf, {
+      data: {
+        number: quote.number,
+        subject: quote.subject,
+        locale: quote.locale,
+        documentDate: quote.createdAt,
+        validUntil: quote.validUntil,
+        notes: quote.notes,
+        client: {
+          businessName: quote.client.businessName,
+          address: quote.client.address,
+          sageCustomerNumber: quote.client.sageCustomerNumber,
+        },
+        lines: quote.lines,
+        subtotalCents: quote.subtotalCents,
+        vatTotalCents: quote.vatTotalCents,
+        totalCents: quote.totalCents,
       },
-      lines: quote.lines,
-      subtotalCents: quote.subtotalCents,
-      vatTotalCents: quote.vatTotalCents,
-      totalCents: quote.totalCents,
-    },
-  }) as React.ReactElement;
-  const pdfBuffer = Buffer.from(await renderToBuffer(element));
+    }) as React.ReactElement;
+    pdfBuffer = Buffer.from(await renderToBuffer(element));
+    console.log('[outlook-handoff] real PDF render OK (quote), bytes:', pdfBuffer.length);
+  } catch (renderErr) {
+    console.error('[outlook-handoff] PDF render failed at (quote):', renderErr instanceof Error ? renderErr.stack : renderErr);
+    throw renderErr;
+  }
 
   const totalChf = (quote.totalCents / 100).toLocaleString('de-CH', {
     minimumFractionDigits: 2,
