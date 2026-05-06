@@ -56,7 +56,19 @@ export async function POST(req: NextRequest) {
     );
     return NextResponse.json(result);
   } catch (err) {
-    console.error('[outlook-handoff] error:', err);
+    // Log everything we can get
+    if (err instanceof Error) {
+      console.error('[outlook-handoff] error message:', err.message);
+      console.error('[outlook-handoff] error stack:', err.stack);
+      console.error('[outlook-handoff] error name:', err.name);
+      if ('cause' in err && err.cause) {
+        console.error('[outlook-handoff] error cause:', err.cause);
+      }
+    } else {
+      console.error('[outlook-handoff] non-error thrown:', err);
+    }
+    console.error('[outlook-handoff] payload was:', JSON.stringify(parsed.data));
+
     const message = err instanceof Error ? err.message : 'Errore sconosciuto';
     const userMessage = message.includes('Minified React error')
       ? 'Errore generazione PDF. Controlla i log server per i dettagli.'
